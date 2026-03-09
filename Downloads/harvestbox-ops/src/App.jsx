@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./lib/supabase";
 
+const SUPABASE_FUNCTIONS_URL = import.meta.env.VITE_SUPABASE_URL + "/functions/v1";
+
 
 
 const COLORS = {
@@ -217,6 +219,51 @@ function ItemQtyBar({ ordered, received, used }) {
 function IncomingStockTab({ data, setData }) {
   const [modal, setModal] = useState(false);
   const [edit, setEdit] = useState(null);
+  const [xeroConnected, setXeroConnected] = useState(false);
+  const [xeroSyncing, setXeroSyncing] = useState(false);
+  const [xeroMsg, setXeroMsg] = useState("");
+
+  // Check if Xero is connected on mount, and handle OAuth redirect callback
+  useEffect(() => {
+    supabase.from("xero_tokens").select("id,tenant_name").eq("id","singleton").single()
+      .then(({ data: t }) => { if (t) setXeroConnected(true); });
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("xero_connected") === "true") {
+      setXeroConnected(true);
+      setXeroMsg("✓ Xero connected successfully!");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    if (params.get("xero_error")) {
+      setXeroMsg("Xero error: " + params.get("xero_error"));
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
+  const connectXero = () => {
+    const returnUrl = window.location.origin;
+    window.location.href = `${SUPABASE_FUNCTIONS_URL}/xero-auth?return_url=${encodeURIComponent(returnUrl)}`;
+  };
+
+  const syncFromXero = async () => {
+    setXeroSyncing(true);
+    setXeroMsg("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/xero-sync`, {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      const json = await res.json();
+      if (!res.ok) { setXeroMsg("⚠️ " + (json.error || "Sync failed")); }
+      else {
+        setXeroMsg(`✓ ${json.message}`);
+        // Reload incoming stock from DB after sync
+        const { data: rows } = await supabase.from("incoming_stock").select("*");
+        if (rows) setData(rows.map(r => ({ ...r, items: typeof r.items === "string" ? JSON.parse(r.items) : (r.items || []) })));
+      }
+    } catch(e) { setXeroMsg("⚠️ " + e.message); }
+    setXeroSyncing(false);
+  };
+
   const close = () => { setModal(false); setEdit(null); };
   const save = (form) => {
     const items = (form.items||[])
@@ -243,10 +290,29 @@ function IncomingStockTab({ data, setData }) {
           <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#2C2416",fontFamily:"Georgia,serif" }}>Incoming Stock</h2>
           <p style={{ margin:"4px 0 0",fontSize:13,color:"#9A8A74" }}>{pendingCount} pending · {receivedCount} received</p>
         </div>
-        <button onClick={()=>setModal(true)} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:"#2D5016",color:"#fff",border:"none",borderRadius:10,cursor:"pointer",fontSize:14,fontWeight:700 }}>
-          <PlusIcon /> New Order
-        </button>
+        <div style={{ display:"flex",gap:8,alignItems:"center" }}>
+          {xeroConnected ? (
+            <button onClick={syncFromXero} disabled={xeroSyncing} style={{ display:"flex",alignItems:"center",gap:6,padding:"10px 16px",background:xeroSyncing?"#8AB46A":"#1AB5EA",color:"#fff",border:"none",borderRadius:10,cursor:xeroSyncing?"not-allowed":"pointer",fontSize:13,fontWeight:700 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+              {xeroSyncing ? "Syncing…" : "Sync from Xero"}
+            </button>
+          ) : (
+            <button onClick={connectXero} style={{ display:"flex",alignItems:"center",gap:6,padding:"10px 16px",background:"#fff",color:"#1AB5EA",border:"2px solid #1AB5EA",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:700 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+              Connect Xero
+            </button>
+          )}
+          <button onClick={()=>setModal(true)} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:"#2D5016",color:"#fff",border:"none",borderRadius:10,cursor:"pointer",fontSize:14,fontWeight:700 }}>
+            <PlusIcon /> New Order
+          </button>
+        </div>
       </div>
+
+      {xeroMsg && (
+        <div style={{ marginBottom:16,padding:"10px 16px",borderRadius:10,background:xeroMsg.startsWith("✓")?"#EEF5E8":"#FDECEA",color:xeroMsg.startsWith("✓")?"#2D5016":"#C0392B",fontSize:13,fontWeight:600,border:`1px solid ${xeroMsg.startsWith("✓")?"#8AB46A":"#E8A0A0"}` }}>
+          {xeroMsg}
+        </div>
+      )}
 
       {data.length===0 ? (
         <div style={{ textAlign:"center",padding:"60px 0",color:"#9A8A74" }}><div style={{ fontSize:40,marginBottom:12 }}>📦</div><p>No incoming stock orders yet</p></div>
