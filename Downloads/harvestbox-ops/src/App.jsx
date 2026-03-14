@@ -252,7 +252,7 @@ function ItemQtyBar({ ordered, received, used }) {
   );
 }
 
-function StockTab({ data, onDelete, onUpdate, stockCodes }) {
+function StockTab({ data, onDelete, onUpdate, stockCodes, rawDefs }) {
   const [search, setSearch] = useState("");
   const [editRow, setEditRow] = useState(null);
   const [form, setForm] = useState({});
@@ -300,7 +300,7 @@ function StockTab({ data, onDelete, onUpdate, stockCodes }) {
   });
 
   // Group by code, sorted by code name
-  const groups = Object.values(
+  const codeGroups = Object.values(
     allRows.reduce((acc, row) => {
       const key = row.code || "(no code)";
       if (!acc[key]) acc[key] = { code: key, description: row.description||"", lots: [] };
@@ -308,6 +308,19 @@ function StockTab({ data, onDelete, onUpdate, stockCodes }) {
       return acc;
     }, {})
   ).sort((a,b) => a.code.localeCompare(b.code));
+
+  // Group code groups by raw type
+  const getRawType = (code) => (rawDefs||[]).find(r => r.raw_id === code)?.raw_type || "Other";
+  const typeMap = {};
+  codeGroups.forEach(cg => {
+    const t = getRawType(cg.code);
+    if (!typeMap[t]) typeMap[t] = [];
+    typeMap[t].push(cg);
+  });
+  const TYPE_ORDER = ["Food", "Packaging", "Chemical", "Other"];
+  const allTypes = [...TYPE_ORDER, ...Object.keys(typeMap).filter(t => !TYPE_ORDER.includes(t))];
+  const typeGroups = allTypes.filter(t => typeMap[t]).map(t => ({ type: t, codeGroups: typeMap[t] }));
+  const groups = codeGroups; // keep for totalAvail calc
 
   const totalAvail = allRows.reduce((s,r)=>s+(Number(r.qty_available)||0),0);
   const thS = { textAlign:"left",fontWeight:600,color:"#6B7280",fontSize:11,textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap",padding:"8px 12px",background:"#F9FAFB" };
@@ -340,77 +353,88 @@ function StockTab({ data, onDelete, onUpdate, stockCodes }) {
         {search && <button onClick={()=>setSearch("")} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9CA3AF",fontSize:16,lineHeight:1,padding:0 }}>✕</button>}
       </div>
 
-      {groups.length === 0 ? (
+      {codeGroups.length === 0 ? (
         <div style={{ textAlign:"center",padding:"48px 24px",color:"#9CA3AF",fontSize:14 }}>
           {data.length === 0 ? "No stock yet — mark a PO as processed to add stock." : "No results match your search."}
         </div>
       ) : (
-        <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
-          {groups.map(group => {
-            const isOpen = collapsed[group.code] === false;
-            const groupAvail = group.lots.reduce((s,r)=>s+(Number(r.qty_available)||0),0);
-            const groupRcvd  = group.lots.reduce((s,r)=>s+(Number(r.qty_received)||0),0);
+        <div style={{ display:"flex",flexDirection:"column",gap:20 }}>
+          {typeGroups.map(({ type, codeGroups: typeCodes }) => {
+            const typeAvail = typeCodes.reduce((s,cg)=>s+cg.lots.reduce((ss,r)=>ss+(Number(r.qty_available)||0),0),0);
             return (
-              <div key={group.code} style={{ border:"1px solid #E5E7EB",borderRadius:8,overflow:"hidden",background:"#fff" }}>
-                {/* Group header — click to toggle */}
-                <div onClick={()=>toggle(group.code)} style={{ display:"flex",alignItems:"center",gap:10,padding:"11px 14px",cursor:"pointer",background:groupAvail>0?"#fff":"#F9FAFB",flexWrap:"wrap" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0,transform:isOpen?"rotate(0deg)":"rotate(-90deg)",transition:"transform 0.18s" }}><polyline points="6 9 12 15 18 9"/></svg>
-                  <span style={{ fontFamily:"monospace",fontSize:13,color:"#374151",fontWeight:700,background:"#F3F4F6",padding:"2px 9px",borderRadius:5,flexShrink:0 }}>{group.code}</span>
-                  <span style={{ fontSize:13,color:"#111827",fontWeight:600,flex:1,minWidth:0 }}>{group.description}</span>
-                  <span style={{ fontSize:12,color:"#9CA3AF",whiteSpace:"nowrap" }}>{group.lots.length} lot{group.lots.length!==1?"s":""}</span>
-                  <span style={{ fontSize:13,fontWeight:800,color:groupAvail>0?"#15803D":"#9CA3AF",whiteSpace:"nowrap",background:groupAvail>0?"#F0FDF4":"#F9FAFB",padding:"3px 10px",borderRadius:20 }}>{groupAvail} avail</span>
+              <div key={type}>
+                <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:8 }}>
+                  <span style={{ fontSize:13,fontWeight:800,color:"#374151",textTransform:"uppercase",letterSpacing:"0.07em" }}>{type}</span>
+                  <span style={{ fontSize:12,color:"#9CA3AF" }}>{typeCodes.length} code{typeCodes.length!==1?"s":""}</span>
+                  <span style={{ fontSize:12,fontWeight:700,color:typeAvail>0?"#15803D":"#9CA3AF",background:typeAvail>0?"#F0FDF4":"#F9FAFB",padding:"2px 10px",borderRadius:20 }}>{typeAvail} avail</span>
                 </div>
-
-                {/* Individual lots */}
-                {isOpen && (
-                  <div style={{ overflowX:"auto",WebkitOverflowScrolling:"touch",borderTop:"1px solid #E5E7EB" }}>
-                    <table style={{ width:"100%",minWidth:640,borderCollapse:"collapse",fontSize:12 }}>
-                      <thead>
-                        <tr style={{ background:"#F9FAFB" }}>
-                          <th style={thS}>Batch</th>
-                          <th style={thS}>Best Before</th>
-                          <th style={thS}>Supplier</th>
-                          <th style={thS}>PO #</th>
-                          <th style={thS}>Received</th>
-                          <th style={{...thS,textAlign:"right"}}>Rcvd Qty</th>
-                          <th style={{...thS,textAlign:"right"}}>Available</th>
-                          <th style={thS}></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {group.lots.sort((a,b)=>(b.received_at||"").localeCompare(a.received_at||"")).map((row,i) => (
-                          <tr key={row.id} style={{ borderTop:"1px solid #E5E7EB",background:i%2===0?"#fff":"#F9FAFB" }}>
-                            <td style={{ padding:"8px 12px",fontFamily:"monospace",color:"#374151" }}>{row.batch||<span style={{color:"#D1D5DB"}}>—</span>}</td>
-                            <td style={{ padding:"8px 12px",whiteSpace:"nowrap",...bbColour(row.best_before) }}>
-                              {row.best_before ? new Date(row.best_before+"T00:00:00").toLocaleDateString("en-AU",{day:"2-digit",month:"short",year:"numeric"}) : <span style={{color:"#D1D5DB"}}>—</span>}
-                            </td>
-                            <td style={{ padding:"8px 12px",color:"#374151",whiteSpace:"nowrap" }}>{row.supplier||"—"}</td>
-                            <td style={{ padding:"8px 12px",fontFamily:"monospace",color:"#9CA3AF",whiteSpace:"nowrap" }}>{row.po_number||"—"}</td>
-                            <td style={{ padding:"8px 12px",color:"#9CA3AF",whiteSpace:"nowrap" }}>
-                              {row.received_at ? new Date(row.received_at).toLocaleDateString("en-AU",{day:"2-digit",month:"short",year:"numeric"}) : "—"}
-                            </td>
-                            <td style={{ padding:"8px 12px",textAlign:"right",color:"#6B7280",fontWeight:600 }}>{Number(row.qty_received)||0}</td>
-                            <td style={{ padding:"8px 12px",textAlign:"right",fontWeight:800,color:Number(row.qty_available)>0?"#15803D":"#9CA3AF" }}>{Number(row.qty_available)||0}</td>
-                            <td style={{ padding:"8px 12px" }}>
-                              <div style={{ display:"flex",gap:5 }}>
-                                <button onClick={()=>openEdit(row)} title="Edit lot" style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"5px 8px",cursor:"pointer",color:"#15803D",display:"flex",alignItems:"center" }}><EditIcon /></button>
-                                <button onClick={()=>onDelete(row.id)} title="Delete lot" style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"5px 8px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr style={{ borderTop:"1px solid #E5E7EB",background:"#F9FAFB" }}>
-                          <td colSpan={5} style={{ padding:"7px 12px",fontSize:11,fontWeight:700,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.05em" }}>Total</td>
-                          <td style={{ padding:"7px 12px",textAlign:"right",fontWeight:800,color:"#6B7280" }}>{groupRcvd}</td>
-                          <td style={{ padding:"7px 12px",textAlign:"right",fontWeight:800,color:groupAvail>0?"#15803D":"#9CA3AF" }}>{groupAvail}</td>
-                          <td></td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                )}
+                <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
+                  {typeCodes.map(group => {
+                    const isOpen = collapsed[group.code] === false;
+                    const groupAvail = group.lots.reduce((s,r)=>s+(Number(r.qty_available)||0),0);
+                    const groupRcvd  = group.lots.reduce((s,r)=>s+(Number(r.qty_received)||0),0);
+                    return (
+                      <div key={group.code} style={{ border:"1px solid #E5E7EB",borderRadius:8,overflow:"hidden",background:"#fff" }}>
+                        <div onClick={()=>toggle(group.code)} style={{ display:"flex",alignItems:"center",gap:10,padding:"11px 14px",cursor:"pointer",background:groupAvail>0?"#fff":"#F9FAFB",flexWrap:"wrap" }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0,transform:isOpen?"rotate(0deg)":"rotate(-90deg)",transition:"transform 0.18s" }}><polyline points="6 9 12 15 18 9"/></svg>
+                          <span style={{ fontFamily:"monospace",fontSize:13,color:"#374151",fontWeight:700,background:"#F3F4F6",padding:"2px 9px",borderRadius:5,flexShrink:0 }}>{group.code}</span>
+                          <span style={{ fontSize:13,color:"#111827",fontWeight:600,flex:1,minWidth:0 }}>{group.description}</span>
+                          <span style={{ fontSize:12,color:"#9CA3AF",whiteSpace:"nowrap" }}>{group.lots.length} lot{group.lots.length!==1?"s":""}</span>
+                          <span style={{ fontSize:13,fontWeight:800,color:groupAvail>0?"#15803D":"#9CA3AF",whiteSpace:"nowrap",background:groupAvail>0?"#F0FDF4":"#F9FAFB",padding:"3px 10px",borderRadius:20 }}>{groupAvail} avail</span>
+                        </div>
+                        {isOpen && (
+                          <div style={{ overflowX:"auto",WebkitOverflowScrolling:"touch",borderTop:"1px solid #E5E7EB" }}>
+                            <table style={{ width:"100%",minWidth:640,borderCollapse:"collapse",fontSize:12 }}>
+                              <thead>
+                                <tr style={{ background:"#F9FAFB" }}>
+                                  <th style={thS}>Batch</th>
+                                  <th style={thS}>Best Before</th>
+                                  <th style={thS}>Supplier</th>
+                                  <th style={thS}>PO #</th>
+                                  <th style={thS}>Received</th>
+                                  <th style={{...thS,textAlign:"right"}}>Rcvd Qty</th>
+                                  <th style={{...thS,textAlign:"right"}}>Available</th>
+                                  <th style={thS}></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {group.lots.sort((a,b)=>(b.received_at||"").localeCompare(a.received_at||"")).map((row,i) => (
+                                  <tr key={row.id} style={{ borderTop:"1px solid #E5E7EB",background:i%2===0?"#fff":"#F9FAFB" }}>
+                                    <td style={{ padding:"8px 12px",fontFamily:"monospace",color:"#374151" }}>{row.batch||<span style={{color:"#D1D5DB"}}>—</span>}</td>
+                                    <td style={{ padding:"8px 12px",whiteSpace:"nowrap",...bbColour(row.best_before) }}>
+                                      {row.best_before ? new Date(row.best_before+"T00:00:00").toLocaleDateString("en-AU",{day:"2-digit",month:"short",year:"numeric"}) : <span style={{color:"#D1D5DB"}}>—</span>}
+                                    </td>
+                                    <td style={{ padding:"8px 12px",color:"#374151",whiteSpace:"nowrap" }}>{row.supplier||"—"}</td>
+                                    <td style={{ padding:"8px 12px",fontFamily:"monospace",color:"#9CA3AF",whiteSpace:"nowrap" }}>{row.po_number||"—"}</td>
+                                    <td style={{ padding:"8px 12px",color:"#9CA3AF",whiteSpace:"nowrap" }}>
+                                      {row.received_at ? new Date(row.received_at).toLocaleDateString("en-AU",{day:"2-digit",month:"short",year:"numeric"}) : "—"}
+                                    </td>
+                                    <td style={{ padding:"8px 12px",textAlign:"right",color:"#6B7280",fontWeight:600 }}>{Number(row.qty_received)||0}</td>
+                                    <td style={{ padding:"8px 12px",textAlign:"right",fontWeight:800,color:Number(row.qty_available)>0?"#15803D":"#9CA3AF" }}>{Number(row.qty_available)||0}</td>
+                                    <td style={{ padding:"8px 12px" }}>
+                                      <div style={{ display:"flex",gap:5 }}>
+                                        <button onClick={()=>openEdit(row)} title="Edit lot" style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"5px 8px",cursor:"pointer",color:"#15803D",display:"flex",alignItems:"center" }}><EditIcon /></button>
+                                        <button onClick={()=>onDelete(row.id)} title="Delete lot" style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"5px 8px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                              <tfoot>
+                                <tr style={{ borderTop:"1px solid #E5E7EB",background:"#F9FAFB" }}>
+                                  <td colSpan={5} style={{ padding:"7px 12px",fontSize:11,fontWeight:700,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.05em" }}>Total</td>
+                                  <td style={{ padding:"7px 12px",textAlign:"right",fontWeight:800,color:"#6B7280" }}>{groupRcvd}</td>
+                                  <td style={{ padding:"7px 12px",textAlign:"right",fontWeight:800,color:groupAvail>0?"#15803D":"#9CA3AF" }}>{groupAvail}</td>
+                                  <td></td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
@@ -2568,7 +2592,7 @@ export default function App() {
           </nav>
           <main className="app-main">
             {tab==="Incoming PO" && <IncomingStockTab data={incomingStock} setData={syncSetIncomingStock} rawDefs={rawDefs} setRawDefs={syncSetRawDefs} onDelete={id=>deleteRow("incoming_stock",id,setIncomingStock)} onReceived={handlePoReceived} />}
-            {tab==="Raws" && <StockTab data={stock} onDelete={id=>deleteRow("raws",id,setStock)} onUpdate={updateStockRow} stockCodes={stockCodes} />}
+            {tab==="Raws" && <StockTab data={stock} onDelete={id=>deleteRow("raws",id,setStock)} onUpdate={updateStockRow} stockCodes={stockCodes} rawDefs={rawDefs} />}
             {tab==="Products" && <ProductsTab data={products} setData={syncSetProducts} orders={orders} stockCodes={stockCodes} />}
             {tab==="Production" && <ProductionTab data={production} setData={syncSetProduction} incomingStock={incomingStock} setIncomingStock={syncSetIncomingStock} products={products} setProducts={syncSetProducts} recipes={recipes} />}
             {tab==="Orders" && <OrdersTab data={orders} setData={syncSetOrders} products={products} />}
