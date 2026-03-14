@@ -6,10 +6,13 @@ const SUPABASE_FUNCTIONS_URL = import.meta.env.VITE_SUPABASE_URL + "/functions/v
 
 
 const COLORS = {
-  cream: "#FDF6EC", warmWhite: "#FEFAF4", amber: "#D4830A", amberLight: "#F0A830",
-  amberPale: "#FEF3DC", green: "#2D5016", greenMid: "#4A7C2F", greenLight: "#8AB46A",
-  greenPale: "#EEF5E8", brown: "#5C3D1E", brownLight: "#8B6344", brownPale: "#F5EDE3",
-  charcoal: "#2C2416", muted: "#9A8A74", border: "#E8D9C4", red: "#C0392B", redPale: "#FDECEA",
+  bg: "#FFFFFF", surface: "#F9FAFB", surfaceAlt: "#F3F4F6",
+  border: "#E5E7EB", borderDark: "#D1D5DB",
+  text: "#111827", muted: "#6B7280", mutedLight: "#9CA3AF",
+  green: "#15803D", greenMid: "#16A34A", greenLight: "#86EFAC", greenPale: "#F0FDF4",
+  amber: "#D97706", amberLight: "#F59E0B", amberPale: "#FEF3C7",
+  red: "#DC2626", redPale: "#FEF2F2",
+  blue: "#1D4ED8", bluePale: "#EFF6FF",
 };
 
 const initialProducts = [
@@ -54,7 +57,7 @@ const initialProduction = [
   },
 ];
 
-const NAV = ["Incoming Stock", "Products", "Production", "Orders", "Settings"];
+const NAV = ["Incoming PO", "Raws", "Production", "Orders", "Products", "Settings"];
 
 const PlusIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>;
 const TrashIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>;
@@ -65,13 +68,13 @@ const OrdersIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="n
 const SettingsIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
 const PrintIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>;
 
-function Modal({ title, onClose, children }) {
+function Modal({ title, onClose, children, maxWidth=580 }) {
   return (
-    <div style={{ position:"fixed",inset:0,zIndex:1000,background:"rgba(44,36,22,0.5)",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(3px)" }}>
-      <div style={{ background:"#FEFAF4",borderRadius:16,padding:32,width:"100%",maxWidth:580,boxShadow:"0 24px 64px rgba(44,36,22,0.25)",border:"1px solid #E8D9C4",maxHeight:"90vh",overflowY:"auto" }}>
+    <div style={{ position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(3px)" }}>
+      <div style={{ background:"#fff",borderRadius:10,padding:32,width:"100%",maxWidth,boxShadow:"0 8px 30px rgba(0,0,0,0.12)",border:"1px solid #E5E7EB",maxHeight:"90vh",overflowY:"auto" }}>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24 }}>
-          <h3 style={{ margin:0,fontSize:18,fontWeight:700,color:"#2C2416",fontFamily:"Georgia,serif" }}>{title}</h3>
-          <button onClick={onClose} style={{ background:"none",border:"none",cursor:"pointer",color:"#9A8A74",padding:4,borderRadius:6,display:"flex" }}><CloseIcon /></button>
+          <h3 style={{ margin:0,fontSize:18,fontWeight:700,color:"#111827" }}>{title}</h3>
+          <button onClick={onClose} style={{ background:"none",border:"none",cursor:"pointer",color:"#9CA3AF",padding:4,borderRadius:6,display:"flex" }}><CloseIcon /></button>
         </div>
         {children}
       </div>
@@ -79,54 +82,57 @@ function Modal({ title, onClose, children }) {
   );
 }
 
-const inp = { width:"100%",padding:"10px 12px",border:"1.5px solid #E8D9C4",borderRadius:8,fontSize:14,color:"#2C2416",background:"#FDF6EC",outline:"none",fontFamily:"inherit",boxSizing:"border-box" };
-const sel = { width:"100%",padding:"10px 12px",border:"1.5px solid #E8D9C4",borderRadius:8,fontSize:14,color:"#2C2416",background:"#FDF6EC",outline:"none",fontFamily:"inherit",boxSizing:"border-box",cursor:"pointer" };
-const lbl = { display:"block",fontSize:11,fontWeight:700,color:"#8B6344",marginBottom:5,textTransform:"uppercase",letterSpacing:"0.06em" };
+const inp = { width:"100%",padding:"9px 12px",border:"1px solid #E5E7EB",borderRadius:6,fontSize:14,color:"#111827",background:"#fff",outline:"none",fontFamily:"inherit",boxSizing:"border-box" };
+const sel = { width:"100%",padding:"9px 12px",border:"1px solid #E5E7EB",borderRadius:6,fontSize:14,color:"#111827",background:"#fff",outline:"none",fontFamily:"inherit",boxSizing:"border-box",cursor:"pointer" };
+const lbl = { display:"block",fontSize:11,fontWeight:600,color:"#6B7280",marginBottom:4,textTransform:"uppercase",letterSpacing:"0.05em" };
 
 function Field({ label, children }) {
   return <div style={{ marginBottom:16 }}><label style={lbl}>{label}</label>{children}</div>;
 }
-function SaveCancel({ onClose, onSave, saveLabel="Save" }) {
+function SaveCancel({ onClose, onSave, saveLabel="Save", disabled=false }) {
   return (
     <div style={{ display:"flex",gap:10,justifyContent:"flex-end",marginTop:8 }}>
-      <button onClick={onClose} style={{ padding:"10px 20px",borderRadius:8,border:"1.5px solid #E8D9C4",background:"none",cursor:"pointer",color:"#9A8A74",fontSize:14,fontWeight:600 }}>Cancel</button>
-      <button onClick={onSave} style={{ padding:"10px 20px",borderRadius:8,border:"none",background:"#2D5016",cursor:"pointer",color:"#fff",fontSize:14,fontWeight:600 }}>{saveLabel}</button>
+      <button onClick={onClose} style={{ padding:"10px 20px",borderRadius:8,border:"1px solid #E5E7EB",background:"none",cursor:"pointer",color:"#6B7280",fontSize:14,fontWeight:600 }}>Cancel</button>
+      <button onClick={onSave} disabled={disabled} style={{ padding:"10px 20px",borderRadius:8,border:"none",background:disabled?"#86EFAC":"#15803D",cursor:disabled?"not-allowed":"pointer",color:"#fff",fontSize:14,fontWeight:600 }}>{saveLabel}</button>
     </div>
   );
 }
 function ActionBtns({ onEdit, onDelete }) {
   return (
     <div style={{ display:"flex",gap:6 }}>
-      <button onClick={onEdit} style={{ background:"#EEF5E8",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#4A7C2F",display:"flex",alignItems:"center" }}><EditIcon /></button>
-      <button onClick={onDelete} style={{ background:"#FDECEA",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#C0392B",display:"flex",alignItems:"center" }}><TrashIcon /></button>
+      <button onClick={onEdit} style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#16A34A",display:"flex",alignItems:"center" }}><EditIcon /></button>
+      <button onClick={onDelete} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
     </div>
   );
 }
 function StatusBadge({ date }) {
   if (!date) return null;
   const diff = Math.ceil((new Date(date) - new Date()) / 86400000);
-  if (diff < 0) return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#C0392B",background:"#FDECEA" }}>Overdue</span>;
-  if (diff <= 3) return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#D4830A",background:"#FEF3DC" }}>Due Soon</span>;
-  return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#4A7C2F",background:"#EEF5E8" }}>On Track</span>;
+  if (diff < 0) return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#DC2626",background:"#FEF2F2" }}>Overdue</span>;
+  if (diff <= 3) return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#D97706",background:"#FEF3C7" }}>Due Soon</span>;
+  return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#16A34A",background:"#F0FDF4" }}>On Track</span>;
 }
 function Toast({ toast }) {
   if (!toast) return null;
-  return <div style={{ position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",zIndex:2000,background:"#2C2416",color:"#fff",padding:"12px 24px",borderRadius:12,fontSize:14,fontWeight:600,boxShadow:"0 8px 32px rgba(0,0,0,0.2)",borderLeft:`4px solid ${toast.color}`,whiteSpace:"nowrap" }}>{toast.msg}</div>;
+  return <div style={{ position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",zIndex:2000,background:"#111827",color:"#fff",padding:"12px 24px",borderRadius:8,fontSize:14,fontWeight:600,boxShadow:"0 4px 16px rgba(0,0,0,0.15)",borderLeft:`4px solid ${toast.color}`,whiteSpace:"nowrap" }}>{toast.msg}</div>;
 }
 
-const thS = { padding:"10px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.06em",whiteSpace:"nowrap",borderBottom:"2px solid #E8D9C4" };
-const tdS = (i) => ({ padding:"13px 14px", background: i%2===0 ? "transparent" : "#F5EDE333" });
+const thS = { padding:"9px 14px",textAlign:"left",fontSize:11,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap",borderBottom:"1px solid #E5E7EB",background:"#F9FAFB" };
+const tdS = (i) => ({ padding:"12px 14px", background: i%2===0 ? "transparent" : "#F9FAFB" });
 
 const CheckIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
 
-function IncomingStockForm({ initial, onSave, onClose }) {
-  const emptyItem = () => ({ id: Date.now() + Math.random(), code: "", description: "", qty: "", cost: "", receivedQty: "", usedQty: "" });
+function IncomingStockForm({ initial, onSave, onClose, rawDefs, onMarkReceived }) {
+  const emptyItem = () => ({ id: Date.now() + Math.random(), code: "", description: "", qty: "", cost: "", receivedQty: "", usedQty: "", batch: "", usedBy: "", receivedAt: "" });
   const empty = { supplier:"", dateRaised:"", expectedDelivery:"", po:"", reference:"", status:"Pending", notes:"", items:[] };
   const [form, setForm] = useState(initial ? { ...empty, ...initial } : { ...empty, items:[emptyItem()] });
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
   const setItem = (id, k, v) => setForm(f=>({...f, items: f.items.map(it=>it.id===id?{...it,[k]:v}:it)}));
   const addItem = () => setForm(f=>({...f, items:[...f.items, emptyItem()]}));
   const removeItem = (id) => setForm(f=>({...f, items: f.items.filter(it=>it.id!==id)}));
+  const rawList = rawDefs || [];
+  const canSave = true;
+  const canReceive = form.items.length > 0 && form.items.every(it => it.code && Number(it.receivedQty) > 0);
 
   return (
     <div>
@@ -144,61 +150,91 @@ function IncomingStockForm({ initial, onSave, onClose }) {
       <div style={{ marginBottom:16 }}>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
           <label style={lbl}>Line Items</label>
-          <button onClick={addItem} style={{ display:"flex",alignItems:"center",gap:4,fontSize:12,fontWeight:700,color:"#4A7C2F",background:"#EEF5E8",border:"1.5px solid #8AB46A",borderRadius:7,padding:"4px 10px",cursor:"pointer" }}>
+          <button onClick={addItem} style={{ display:"flex",alignItems:"center",gap:4,fontSize:12,fontWeight:700,color:"#16A34A",background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:7,padding:"4px 10px",cursor:"pointer" }}>
             <PlusIcon /> Add Item
           </button>
         </div>
-        <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
-          {form.items.map((item) => (
-            <div key={item.id} style={{ background:"#F5EDE3",borderRadius:10,padding:"12px 12px 8px" }}>
-              <div style={{ display:"grid",gridTemplateColumns:"1fr 2fr 1fr auto",gap:8,marginBottom:8 }}>
-                <div>
-                  <label style={{...lbl,marginBottom:3}}>Item Code</label>
-                  <input style={inp} value={item.code} onChange={e=>setItem(item.id,"code",e.target.value)} placeholder="NUT-ALMOND-1KG" />
-                </div>
-                <div>
-                  <label style={{...lbl,marginBottom:3}}>Description</label>
-                  <input style={inp} value={item.description} onChange={e=>setItem(item.id,"description",e.target.value)} placeholder="Roasted Almonds 1kg" />
-                </div>
-                <div>
-                  <label style={{...lbl,marginBottom:3}}>Unit Cost ($)</label>
-                  <input style={inp} type="number" min="0" step="0.01" value={item.cost} onChange={e=>setItem(item.id,"cost",e.target.value)} placeholder="0.00" />
-                </div>
-                <button onClick={()=>removeItem(item.id)} style={{ background:"#FDECEA",border:"none",borderRadius:7,padding:"8px 10px",cursor:"pointer",color:"#C0392B",display:"flex",alignItems:"center",alignSelf:"end",marginBottom:1 }}><TrashIcon /></button>
-              </div>
-              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8 }}>
-                <div>
-                  <label style={{...lbl,marginBottom:3}}>Ordered Qty</label>
-                  <input style={inp} type="number" min="0" value={item.qty} onChange={e=>setItem(item.id,"qty",e.target.value)} placeholder="0" />
-                </div>
-                <div>
-                  <label style={{...lbl,marginBottom:3}}>Received Qty</label>
-                  <input style={inp} type="number" min="0" value={item.receivedQty} onChange={e=>setItem(item.id,"receivedQty",e.target.value)} placeholder="0" />
-                </div>
-                <div>
-                  <label style={{...lbl,marginBottom:3}}>Used Qty</label>
-                  <input style={{...inp,background:"#EDE0D4"}} type="number" min="0" value={item.usedQty} onChange={e=>setItem(item.id,"usedQty",e.target.value)} placeholder="auto" />
-                </div>
-              </div>
-            </div>
-          ))}
-          {form.items.length===0 && <div style={{ fontSize:12,color:"#9A8A74",padding:"8px 0" }}>No items added — click Add Item above.</div>}
+        <div style={{ overflowX:"auto",WebkitOverflowScrolling:"touch" }}>
+          <table style={{ width:"100%",minWidth:900,borderCollapse:"collapse" }}>
+            <thead>
+              <tr style={{ background:"#F9FAFB" }}>
+                {["Raw ID","Description","Cost ($)","Ord Qty","Rcvd Qty","Batch","Use By","Received At",""].map((h,i) => (
+                  <th key={i} style={{ padding:"6px 8px",fontSize:11,fontWeight:700,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.04em",textAlign:"left",whiteSpace:"nowrap",borderBottom:"1px solid #E5E7EB" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {form.items.map((item, idx) => (
+                <tr key={item.id} style={{ background:idx%2===0?"#fff":"#F9FAFB" }}>
+                  <td style={{ padding:"4px 6px",minWidth:160 }}>
+                    {rawList.length > 0 ? (
+                      <select style={{ ...sel, fontSize:12, padding:"5px 8px", borderColor: item.code ? "#E5E7EB" : "#DC2626" }} value={item.code} onChange={e => {
+                        const rd = rawList.find(r => r.raw_id === e.target.value);
+                        setItem(item.id, "code", e.target.value);
+                        if (rd) setItem(item.id, "description", rd.description);
+                      }}>
+                        <option value="">— select —</option>
+                        {RAW_TYPES.map(type => {
+                          const group = rawList.filter(r => r.raw_type === type);
+                          if (group.length === 0) return null;
+                          return <optgroup key={type} label={type}>{group.map(r => <option key={r.id} value={r.raw_id}>{r.raw_id}</option>)}</optgroup>;
+                        })}
+                        {rawList.filter(r => !r.raw_type || !RAW_TYPES.includes(r.raw_type)).map(r => <option key={r.id} value={r.raw_id}>{r.raw_id}</option>)}
+                      </select>
+                    ) : (
+                      <input style={{ ...inp, fontSize:12, padding:"5px 8px", borderColor: item.code ? "#E5E7EB" : "#DC2626" }} value={item.code} onChange={e=>setItem(item.id,"code",e.target.value)} placeholder="RAW-ID" />
+                    )}
+                  </td>
+                  <td style={{ padding:"4px 6px",minWidth:160 }}>
+                    <input style={{ ...inp, fontSize:12, padding:"5px 8px" }} value={item.description} onChange={e=>setItem(item.id,"description",e.target.value)} placeholder="Description" />
+                  </td>
+                  <td style={{ padding:"4px 6px",minWidth:80 }}>
+                    <input style={{ ...inp, fontSize:12, padding:"5px 8px" }} type="number" min="0" step="0.01" value={item.cost} onChange={e=>setItem(item.id,"cost",e.target.value)} placeholder="0.00" />
+                  </td>
+                  <td style={{ padding:"4px 6px",minWidth:75 }}>
+                    <input style={{ ...inp, fontSize:12, padding:"5px 8px" }} type="number" min="0" value={item.qty} onChange={e=>setItem(item.id,"qty",e.target.value)} placeholder="0" />
+                  </td>
+                  <td style={{ padding:"4px 6px",minWidth:75 }}>
+                    <input style={{ ...inp, fontSize:12, padding:"5px 8px" }} type="number" min="0" value={item.receivedQty} onChange={e=>setItem(item.id,"receivedQty",e.target.value)} placeholder="0" />
+                  </td>
+                  <td style={{ padding:"4px 6px",minWidth:110 }}>
+                    <input style={{ ...inp, fontSize:12, padding:"5px 8px" }} value={item.batch||""} onChange={e=>setItem(item.id,"batch",e.target.value)} placeholder="B2026-001" />
+                  </td>
+                  <td style={{ padding:"4px 6px",minWidth:120 }}>
+                    <input style={{ ...inp, fontSize:12, padding:"5px 8px" }} type="date" value={item.usedBy||""} onChange={e=>setItem(item.id,"usedBy",e.target.value)} />
+                  </td>
+                  <td style={{ padding:"4px 6px",minWidth:140,whiteSpace:"nowrap",fontSize:12,color:"#6B7280" }}>
+                    {item.receivedAt ? new Date(item.receivedAt).toLocaleString("en-AU",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}) : <span style={{color:"#D1D5DB"}}>—</span>}
+                  </td>
+                  <td style={{ padding:"4px 6px" }}>
+                    <button onClick={()=>removeItem(item.id)} style={{ background:"#FEF2F2",border:"none",borderRadius:6,padding:"5px 8px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {form.items.length===0 && <div style={{ fontSize:12,color:"#9CA3AF",padding:"10px 0" }}>No items added — click Add Item above.</div>}
         </div>
       </div>
 
       <Field label="Notes"><textarea style={{...inp,resize:"vertical",minHeight:60,lineHeight:1.5}} value={form.notes} onChange={e=>set("notes",e.target.value)} placeholder="Any notes about this order..." /></Field>
-      <SaveCancel onClose={onClose} onSave={()=>onSave(form)} />
+      {onMarkReceived && (
+        <button onClick={canReceive ? ()=>onMarkReceived(form) : undefined} disabled={!canReceive} style={{ display:"flex",alignItems:"center",gap:6,width:"100%",justifyContent:"center",padding:"10px 0",marginBottom:12,background:canReceive?"#15803D":"#D1D5DB",border:"none",borderRadius:8,cursor:canReceive?"pointer":"not-allowed",color:canReceive?"#fff":"#9CA3AF",fontSize:14,fontWeight:700 }}>
+          <CheckIcon /> Mark as Received
+        </button>
+      )}
+      <SaveCancel onClose={onClose} onSave={()=>onSave(form)} disabled={!canSave} />
     </div>
   );
 }
 
 function StockStatusBadge({ row }) {
-  if (row.status === "Received") return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#2D5016",background:"#C6E6A8" }}>✓ Received</span>;
+  if (row.status === "Processed") return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#15803D",background:"#DCFCE7" }}>✓ Processed</span>;
   const diff = Math.ceil((new Date(row.expectedDelivery) - new Date()) / 86400000);
   if (!row.expectedDelivery) return null;
-  if (diff < 0) return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#C0392B",background:"#FDECEA" }}>Overdue</span>;
-  if (diff <= 3) return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#D4830A",background:"#FEF3DC" }}>Due Soon</span>;
-  return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#4A7C2F",background:"#EEF5E8" }}>Pending</span>;
+  if (diff < 0) return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#DC2626",background:"#FEF2F2" }}>Overdue</span>;
+  if (diff <= 3) return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#D97706",background:"#FEF3C7" }}>Due Soon</span>;
+  return <span style={{ padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,color:"#16A34A",background:"#F0FDF4" }}>Pending</span>;
 }
 
 function ItemQtyBar({ ordered, received, used }) {
@@ -209,155 +245,363 @@ function ItemQtyBar({ ordered, received, used }) {
   const recPct = Math.min(100, (rec/ord)*100);
   const usePct = Math.min(recPct, (use/ord)*100);
   return (
-    <div style={{ height:5,background:"#E8D9C4",borderRadius:4,overflow:"hidden",position:"relative",marginTop:4 }}>
-      <div style={{ position:"absolute",left:0,top:0,height:"100%",width:`${recPct}%`,background:"#8AB46A",borderRadius:4 }}/>
-      <div style={{ position:"absolute",left:0,top:0,height:"100%",width:`${usePct}%`,background:"#4A7C2F",borderRadius:4 }}/>
+    <div style={{ height:5,background:"#E5E7EB",borderRadius:4,overflow:"hidden",position:"relative",marginTop:4 }}>
+      <div style={{ position:"absolute",left:0,top:0,height:"100%",width:`${recPct}%`,background:"#86EFAC",borderRadius:4 }}/>
+      <div style={{ position:"absolute",left:0,top:0,height:"100%",width:`${usePct}%`,background:"#16A34A",borderRadius:4 }}/>
     </div>
   );
 }
 
-function IncomingStockTab({ data, setData }) {
+function StockTab({ data, onDelete, onUpdate, stockCodes }) {
+  const [search, setSearch] = useState("");
+  const [editRow, setEditRow] = useState(null);
+  const [form, setForm] = useState({});
+  const setF = (k, v) => setForm(f => ({...f, [k]: v}));
+
+  const openEdit = (row) => {
+    setEditRow(row);
+    setForm({
+      code: row.code||"",
+      description: row.description||"",
+      supplier: row.supplier||"",
+      po_number: row.po_number||"",
+      received_at: row.received_at ? row.received_at.slice(0,10) : "",
+      qty_received: row.qty_received??0,
+      qty_available: row.qty_available??0,
+      batch: row.batch||"",
+      best_before: row.best_before||"",
+    });
+  };
+  const closeEdit = () => setEditRow(null);
+  const saveEdit = () => {
+    const saved = {
+      ...editRow,
+      ...form,
+      qty_received: Number(form.qty_received)||0,
+      qty_available: Number(form.qty_available)||0,
+      received_at: form.received_at ? new Date(form.received_at+"T00:00:00").toISOString() : editRow.received_at,
+      best_before: form.best_before||null,
+    };
+    onUpdate(saved);
+    closeEdit();
+  };
+
+  const [collapsed, setCollapsed] = useState({});
+  const toggle = (code) => setCollapsed(c => ({...c, [code]: c[code] !== false ? false : true}));
+
+  const allRows = data.filter(row => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (row.code||"").toLowerCase().includes(q) ||
+           (row.description||"").toLowerCase().includes(q) ||
+           (row.supplier||"").toLowerCase().includes(q) ||
+           (row.po_number||"").toLowerCase().includes(q) ||
+           (row.batch||"").toLowerCase().includes(q);
+  });
+
+  // Group by code, sorted by code name
+  const groups = Object.values(
+    allRows.reduce((acc, row) => {
+      const key = row.code || "(no code)";
+      if (!acc[key]) acc[key] = { code: key, description: row.description||"", lots: [] };
+      acc[key].lots.push(row);
+      return acc;
+    }, {})
+  ).sort((a,b) => a.code.localeCompare(b.code));
+
+  const totalAvail = allRows.reduce((s,r)=>s+(Number(r.qty_available)||0),0);
+  const thS = { textAlign:"left",fontWeight:600,color:"#6B7280",fontSize:11,textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap",padding:"8px 12px",background:"#F9FAFB" };
+
+  const bbColour = (bb) => {
+    if (!bb) return {};
+    const days = Math.ceil((new Date(bb) - new Date()) / 86400000);
+    if (days < 0) return { color:"#DC2626", fontWeight:700 };
+    if (days <= 30) return { color:"#D97706", fontWeight:700 };
+    return { color:"#15803D" };
+  };
+
+  const EditIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
+
+  return (
+    <div>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,gap:12,flexWrap:"wrap" }}>
+        <div>
+          <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#111827" }}>Raws</h2>
+          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9CA3AF" }}>{groups.length} codes · {allRows.length} lots · {totalAvail} units available</p>
+        </div>
+        <button onClick={()=>openEdit({id:Date.now(),code:"",description:"",batch:"",best_before:"",supplier:"",po_number:"",received_at:new Date().toISOString().slice(0,10),qty_received:0,qty_available:0})} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:"#15803D",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:14,fontWeight:700,flexShrink:0 }}>
+          <PlusIcon /> Add Raw
+        </button>
+      </div>
+
+      <div style={{ position:"relative",marginBottom:16 }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search code, description, supplier, batch…" style={{ width:"100%",padding:"9px 32px 9px 34px",borderRadius:8,border:"1px solid #E5E7EB",fontSize:13,background:"#fff",boxSizing:"border-box" }} />
+        {search && <button onClick={()=>setSearch("")} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9CA3AF",fontSize:16,lineHeight:1,padding:0 }}>✕</button>}
+      </div>
+
+      {groups.length === 0 ? (
+        <div style={{ textAlign:"center",padding:"48px 24px",color:"#9CA3AF",fontSize:14 }}>
+          {data.length === 0 ? "No stock yet — mark a PO as processed to add stock." : "No results match your search."}
+        </div>
+      ) : (
+        <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+          {groups.map(group => {
+            const isOpen = collapsed[group.code] === false;
+            const groupAvail = group.lots.reduce((s,r)=>s+(Number(r.qty_available)||0),0);
+            const groupRcvd  = group.lots.reduce((s,r)=>s+(Number(r.qty_received)||0),0);
+            return (
+              <div key={group.code} style={{ border:"1px solid #E5E7EB",borderRadius:8,overflow:"hidden",background:"#fff" }}>
+                {/* Group header — click to toggle */}
+                <div onClick={()=>toggle(group.code)} style={{ display:"flex",alignItems:"center",gap:10,padding:"11px 14px",cursor:"pointer",background:groupAvail>0?"#fff":"#F9FAFB",flexWrap:"wrap" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0,transform:isOpen?"rotate(0deg)":"rotate(-90deg)",transition:"transform 0.18s" }}><polyline points="6 9 12 15 18 9"/></svg>
+                  <span style={{ fontFamily:"monospace",fontSize:13,color:"#374151",fontWeight:700,background:"#F3F4F6",padding:"2px 9px",borderRadius:5,flexShrink:0 }}>{group.code}</span>
+                  <span style={{ fontSize:13,color:"#111827",fontWeight:600,flex:1,minWidth:0 }}>{group.description}</span>
+                  <span style={{ fontSize:12,color:"#9CA3AF",whiteSpace:"nowrap" }}>{group.lots.length} lot{group.lots.length!==1?"s":""}</span>
+                  <span style={{ fontSize:13,fontWeight:800,color:groupAvail>0?"#15803D":"#9CA3AF",whiteSpace:"nowrap",background:groupAvail>0?"#F0FDF4":"#F9FAFB",padding:"3px 10px",borderRadius:20 }}>{groupAvail} avail</span>
+                </div>
+
+                {/* Individual lots */}
+                {isOpen && (
+                  <div style={{ overflowX:"auto",WebkitOverflowScrolling:"touch",borderTop:"1px solid #E5E7EB" }}>
+                    <table style={{ width:"100%",minWidth:640,borderCollapse:"collapse",fontSize:12 }}>
+                      <thead>
+                        <tr style={{ background:"#F9FAFB" }}>
+                          <th style={thS}>Batch</th>
+                          <th style={thS}>Best Before</th>
+                          <th style={thS}>Supplier</th>
+                          <th style={thS}>PO #</th>
+                          <th style={thS}>Received</th>
+                          <th style={{...thS,textAlign:"right"}}>Rcvd Qty</th>
+                          <th style={{...thS,textAlign:"right"}}>Available</th>
+                          <th style={thS}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.lots.sort((a,b)=>(b.received_at||"").localeCompare(a.received_at||"")).map((row,i) => (
+                          <tr key={row.id} style={{ borderTop:"1px solid #E5E7EB",background:i%2===0?"#fff":"#F9FAFB" }}>
+                            <td style={{ padding:"8px 12px",fontFamily:"monospace",color:"#374151" }}>{row.batch||<span style={{color:"#D1D5DB"}}>—</span>}</td>
+                            <td style={{ padding:"8px 12px",whiteSpace:"nowrap",...bbColour(row.best_before) }}>
+                              {row.best_before ? new Date(row.best_before+"T00:00:00").toLocaleDateString("en-AU",{day:"2-digit",month:"short",year:"numeric"}) : <span style={{color:"#D1D5DB"}}>—</span>}
+                            </td>
+                            <td style={{ padding:"8px 12px",color:"#374151",whiteSpace:"nowrap" }}>{row.supplier||"—"}</td>
+                            <td style={{ padding:"8px 12px",fontFamily:"monospace",color:"#9CA3AF",whiteSpace:"nowrap" }}>{row.po_number||"—"}</td>
+                            <td style={{ padding:"8px 12px",color:"#9CA3AF",whiteSpace:"nowrap" }}>
+                              {row.received_at ? new Date(row.received_at).toLocaleDateString("en-AU",{day:"2-digit",month:"short",year:"numeric"}) : "—"}
+                            </td>
+                            <td style={{ padding:"8px 12px",textAlign:"right",color:"#6B7280",fontWeight:600 }}>{Number(row.qty_received)||0}</td>
+                            <td style={{ padding:"8px 12px",textAlign:"right",fontWeight:800,color:Number(row.qty_available)>0?"#15803D":"#9CA3AF" }}>{Number(row.qty_available)||0}</td>
+                            <td style={{ padding:"8px 12px" }}>
+                              <div style={{ display:"flex",gap:5 }}>
+                                <button onClick={()=>openEdit(row)} title="Edit lot" style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"5px 8px",cursor:"pointer",color:"#15803D",display:"flex",alignItems:"center" }}><EditIcon /></button>
+                                <button onClick={()=>onDelete(row.id)} title="Delete lot" style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"5px 8px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ borderTop:"1px solid #E5E7EB",background:"#F9FAFB" }}>
+                          <td colSpan={5} style={{ padding:"7px 12px",fontSize:11,fontWeight:700,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.05em" }}>Total</td>
+                          <td style={{ padding:"7px 12px",textAlign:"right",fontWeight:800,color:"#6B7280" }}>{groupRcvd}</td>
+                          <td style={{ padding:"7px 12px",textAlign:"right",fontWeight:800,color:groupAvail>0?"#15803D":"#9CA3AF" }}>{groupAvail}</td>
+                          <td></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {editRow && (
+        <Modal title="Edit Raw Lot" onClose={closeEdit}>
+          <Field label="Item Code">
+            {stockCodes && stockCodes.length > 0 ? (
+              <select style={sel} value={form.code} onChange={e => {
+                const sc = stockCodes.find(r => r.code === e.target.value);
+                setF("code", e.target.value);
+                if (sc) setF("description", sc.description);
+              }}>
+                <option value="">— select code —</option>
+                {STOCK_TYPES.map(type => {
+                  const group = stockCodes.filter(r => r.type === type);
+                  if (!group.length) return null;
+                  return <optgroup key={type} label={type}>{group.map(r => <option key={r.id} value={r.code}>{r.code} · {r.description}</option>)}</optgroup>;
+                })}
+              </select>
+            ) : (
+              <input style={inp} value={form.code} onChange={e=>setF("code",e.target.value)} placeholder="NUT-ALMOND-1KG" />
+            )}
+          </Field>
+          <Field label="Description"><input style={inp} value={form.description} onChange={e=>setF("description",e.target.value)} placeholder="Description" /></Field>
+          <Field label="Batch"><input style={inp} value={form.batch} onChange={e=>setF("batch",e.target.value)} placeholder="e.g. B2026-03-A" /></Field>
+          <Field label="Best Before"><input style={inp} type="date" value={form.best_before} onChange={e=>setF("best_before",e.target.value)} /></Field>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            <Field label="Supplier"><input style={inp} value={form.supplier} onChange={e=>setF("supplier",e.target.value)} placeholder="Supplier" /></Field>
+            <Field label="PO #"><input style={inp} value={form.po_number} onChange={e=>setF("po_number",e.target.value)} placeholder="PO-2026-001" /></Field>
+          </div>
+          <Field label="Date Received"><input style={inp} type="date" value={form.received_at} onChange={e=>setF("received_at",e.target.value)} /></Field>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            <Field label="Qty Received"><input style={inp} type="number" min="0" value={form.qty_received} onChange={e=>setF("qty_received",e.target.value)} /></Field>
+            <Field label="Qty Available"><input style={inp} type="number" min="0" value={form.qty_available} onChange={e=>setF("qty_available",e.target.value)} /></Field>
+          </div>
+          <SaveCancel onClose={closeEdit} onSave={saveEdit} />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function IncomingStockTab({ data, setData, rawDefs, setRawDefs, onDelete, onReceived }) {
   const [modal, setModal] = useState(false);
   const [edit, setEdit] = useState(null);
-  const [xeroConnected, setXeroConnected] = useState(false);
-  const [xeroSyncing, setXeroSyncing] = useState(false);
-  const [xeroMsg, setXeroMsg] = useState("");
+  const [search, setSearch] = useState("");
+  const [hideReceived, setHideReceived] = useState(true);
 
-  // Check if Xero is connected on mount, and handle OAuth redirect callback
-  useEffect(() => {
-    supabase.from("xero_tokens").select("id,tenant_name").eq("id","singleton").single()
-      .then(({ data: t }) => { if (t) setXeroConnected(true); });
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("xero_connected") === "true") {
-      setXeroConnected(true);
-      setXeroMsg("✓ Xero connected successfully!");
-      window.history.replaceState({}, "", window.location.pathname);
-    }
-    if (params.get("xero_error")) {
-      setXeroMsg("Xero error: " + params.get("xero_error"));
-      window.history.replaceState({}, "", window.location.pathname);
-    }
-  }, []);
-
-  const connectXero = () => {
-    const returnUrl = window.location.origin;
-    window.location.href = `${SUPABASE_FUNCTIONS_URL}/xero-auth?return_url=${encodeURIComponent(returnUrl)}`;
-  };
-
-  const syncFromXero = async () => {
-    setXeroSyncing(true);
-    setXeroMsg("");
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/xero-sync`, {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
-      const json = await res.json();
-      if (!res.ok) { setXeroMsg("⚠️ " + (json.error || "Sync failed")); }
-      else {
-        setXeroMsg(`✓ ${json.message}`);
-        // Reload incoming stock from DB after sync
-        const { data: rows } = await supabase.from("incoming_stock").select("*");
-        if (rows) setData(rows.map(r => ({ ...r, items: typeof r.items === "string" ? JSON.parse(r.items) : (r.items || []) })));
-      }
-    } catch(e) { setXeroMsg("⚠️ " + e.message); }
-    setXeroSyncing(false);
-  };
+  const [collapsed, setCollapsed] = useState({});
+  const toggleCollapse = (id) => setCollapsed(c => ({ ...c, [id]: c[id] === false ? true : false }));
 
   const close = () => { setModal(false); setEdit(null); };
   const save = (form) => {
     const items = (form.items||[])
-      .map(it=>({...it, qty:Number(it.qty)||0, cost:Number(it.cost)||0, receivedQty:Number(it.receivedQty)||0, usedQty:Number(it.usedQty)||0}))
+      .map(it=>({ id:it.id, code:it.code||"", description:it.description||"", qty:Number(it.qty)||0, cost:Number(it.cost)||0, receivedQty:Number(it.receivedQty)||0, usedQty:Number(it.usedQty)||0, batch:it.batch||"", usedBy:it.usedBy||"", receivedAt:it.receivedAt||"" }))
       .filter(it=>it.code||it.description);
     const record = { ...form, items };
-    if (edit) setData(d=>d.map(r=>r.id===edit.id?{...record,id:r.id}:r));
-    else setData(d=>[...d,{...record,id:Date.now(),status:"Pending"}]);
+    if (edit) {
+      const status = edit.status === "Processed" ? "Processed" : record.status;
+      const saved = { ...record, id: edit.id, status };
+      setData(d=>d.map(r => r.id===edit.id ? saved : r));
+      // Direct targeted update so batch/usedBy/receivedAt are reliably persisted
+      supabase.from("incoming_stock").update({
+        supplier: saved.supplier,
+        po: saved.po,
+        reference: saved.reference,
+        status: saved.status,
+        notes: saved.notes,
+        dateraised: saved.dateRaised || saved.dateraised || "",
+        expecteddelivery: saved.expectedDelivery || saved.expecteddelivery || "",
+        items: JSON.stringify(items),
+      }).eq("id", edit.id).then(({ error }) => { if (error) console.warn("PO update error:", error); });
+    } else {
+      const newId = Date.now();
+      const saved = { ...record, id: newId, status: "Pending" };
+      setData(d=>[...d, saved]);
+      supabase.from("incoming_stock").insert({
+        id: newId,
+        supplier: saved.supplier,
+        po: saved.po,
+        reference: saved.reference,
+        status: saved.status,
+        notes: saved.notes,
+        dateraised: saved.dateRaised || saved.dateraised || "",
+        expecteddelivery: saved.expectedDelivery || saved.expecteddelivery || "",
+        items: JSON.stringify(items),
+      }).then(({ error }) => { if (error) console.warn("PO insert error:", error); });
+    }
+    // Auto-register any new raw IDs into raw_defs
+    if (setRawDefs) {
+      items.forEach(it => {
+        if (!it.code) return;
+        setRawDefs(prev => {
+          if (prev.find(r => r.raw_id === it.code)) return prev;
+          return [...prev, { id: Date.now() + Math.random(), raw_id: it.code, description: it.description || "", available: true, raw_type: "Food" }];
+        });
+      });
+    }
     close();
   };
-  const markReceived = (id) => setData(d=>d.map(r=>{
-    if (r.id!==id) return r;
-    const items = r.items.map(it=>({...it, receivedQty: it.receivedQty>0 ? it.receivedQty : it.qty}));
-    return {...r, status:"Received", items};
-  }));
+  const markReceived = (id, formItems) => {
+    const row = data.find(r => r.id === id);
+    const now = new Date().toISOString();
+    const sourceItems = formItems || row?.items || [];
+    const updatedItems = sourceItems.map(it=>({...it, receivedQty: it.receivedQty>0 ? it.receivedQty : it.qty, receivedAt: it.receivedAt || now}));
+    setData(d=>d.map(r=>{
+      if (r.id!==id) return r;
+      return {...r, status:"Processed", items: updatedItems};
+    }));
+    supabase.from("incoming_stock").update({
+      status: "Processed",
+      items: JSON.stringify(updatedItems),
+    }).eq("id", id).then(({ error }) => { if (error) console.warn("Mark received error:", error); });
+    if (onReceived && row) onReceived({...row, items: updatedItems});
+  };
 
-  const pendingCount = data.filter(r=>r.status!=="Received").length;
-  const receivedCount = data.filter(r=>r.status==="Received").length;
+  const pendingCount = data.filter(r=>r.status!=="Processed").length;
+  const receivedCount = data.filter(r=>r.status==="Processed").length;
+
+  const filtered = data.filter(row => {
+    if (hideReceived && row.status === "Processed") return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const inHeader = (row.supplier||"").toLowerCase().includes(q) || (row.po||"").toLowerCase().includes(q) || (row.reference||"").toLowerCase().includes(q);
+      const inItems = (row.items||[]).some(it => (it.code||"").toLowerCase().includes(q) || (it.description||"").toLowerCase().includes(q));
+      if (!inHeader && !inItems) return false;
+    }
+    return true;
+  }).sort((a,b) => (b.expectedDelivery||"").localeCompare(a.expectedDelivery||""));
 
   return (
     <div>
-      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24 }}>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,gap:12,flexWrap:"wrap" }}>
         <div>
-          <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#2C2416",fontFamily:"Georgia,serif" }}>Incoming Stock</h2>
-          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9A8A74" }}>{pendingCount} pending · {receivedCount} received</p>
+          <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#111827" }}>Incoming PO</h2>
+          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9CA3AF" }}>{pendingCount} pending · {receivedCount} received</p>
         </div>
-        <div style={{ display:"flex",gap:8,alignItems:"center" }}>
-          {xeroConnected ? (
-            <button onClick={syncFromXero} disabled={xeroSyncing} style={{ display:"flex",alignItems:"center",gap:6,padding:"10px 16px",background:xeroSyncing?"#8AB46A":"#1AB5EA",color:"#fff",border:"none",borderRadius:10,cursor:xeroSyncing?"not-allowed":"pointer",fontSize:13,fontWeight:700 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-              {xeroSyncing ? "Syncing…" : "Sync from Xero"}
-            </button>
-          ) : (
-            <button onClick={connectXero} style={{ display:"flex",alignItems:"center",gap:6,padding:"10px 16px",background:"#fff",color:"#1AB5EA",border:"2px solid #1AB5EA",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:700 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
-              Connect Xero
-            </button>
-          )}
-          <button onClick={()=>setModal(true)} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:"#2D5016",color:"#fff",border:"none",borderRadius:10,cursor:"pointer",fontSize:14,fontWeight:700 }}>
-            <PlusIcon /> New Order
-          </button>
-        </div>
+        <button onClick={()=>setModal(true)} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:"#15803D",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:14,fontWeight:700,flexShrink:0 }}>
+          <PlusIcon /> New Order
+        </button>
       </div>
 
-      {xeroMsg && (
-        <div style={{ marginBottom:16,padding:"10px 16px",borderRadius:10,background:xeroMsg.startsWith("✓")?"#EEF5E8":"#FDECEA",color:xeroMsg.startsWith("✓")?"#2D5016":"#C0392B",fontSize:13,fontWeight:600,border:`1px solid ${xeroMsg.startsWith("✓")?"#8AB46A":"#E8A0A0"}` }}>
-          {xeroMsg}
+      <div style={{ display:"flex",gap:10,alignItems:"center",marginBottom:16,flexWrap:"wrap" }}>
+        <div style={{ position:"relative",flex:1,minWidth:200 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search supplier, PO, item code…" style={{ width:"100%",padding:"9px 32px 9px 34px",borderRadius:8,border:"1px solid #E5E7EB",fontSize:13,background:"#fff",boxSizing:"border-box" }} />
+          {search && <button onClick={()=>setSearch("")} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9CA3AF",fontSize:16,lineHeight:1,padding:0 }}>✕</button>}
         </div>
-      )}
+        <label style={{ display:"flex",alignItems:"center",gap:8,fontSize:13,fontWeight:600,color:"#374151",cursor:"pointer",whiteSpace:"nowrap",userSelect:"none",background:"#F9FAFB",border:"1px solid #E5E7EB",borderRadius:8,padding:"8px 14px" }}>
+          <input type="checkbox" checked={hideReceived} onChange={e=>setHideReceived(e.target.checked)} style={{ width:16,height:16,accentColor:"#15803D",cursor:"pointer" }} />
+          Hide Processed
+        </label>
+      </div>
 
       {data.length===0 ? (
-        <div style={{ textAlign:"center",padding:"60px 0",color:"#9A8A74" }}><div style={{ fontSize:40,marginBottom:12 }}>📦</div><p>No incoming stock orders yet</p></div>
+        <div style={{ textAlign:"center",padding:"60px 0",color:"#9CA3AF" }}><div style={{ fontSize:40,marginBottom:12 }}>📦</div><p>No incoming stock orders yet</p></div>
+      ) : filtered.length===0 ? (
+        <div style={{ textAlign:"center",padding:"40px 0",color:"#9CA3AF" }}><p>No orders match your search{hideReceived ? " (processed orders are hidden)" : ""}.</p></div>
       ) : (
         <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
-          {data.map(row=>(
-            <div key={row.id} style={{ background:"#FEFAF4",border:`1.5px solid ${row.status==="Received"?"#8AB46A":"#E8D9C4"}`,borderRadius:14,overflow:"hidden" }}>
+          {filtered.map(row=>{
+            const isCollapsed = collapsed[row.id] !== false;
+            return (
+            <div key={row.id} style={{ background:"#fff",border:`1px solid ${row.status==="Processed"?"#86EFAC":"#E5E7EB"}`,borderRadius:8,overflow:"hidden" }}>
               {/* Header row */}
-              <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap",background:row.status==="Received"?"#F2FAEE":"#FDF6EC",borderBottom:"1px solid #E8D9C4" }}>
-                <div style={{ flex:1,minWidth:160 }}>
-                  <div style={{ fontWeight:700,color:"#2C2416",fontSize:15 }}>{row.supplier}</div>
-                  <div style={{ display:"flex",gap:6,marginTop:5,flexWrap:"wrap",alignItems:"center" }}>
-                    <span style={{ fontFamily:"monospace",fontSize:12,background:"#FEF3DC",color:"#D4830A",padding:"2px 8px",borderRadius:5,fontWeight:700 }}>{row.po}</span>
-                    <span style={{ fontFamily:"monospace",fontSize:12,color:"#9A8A74" }}>{row.reference}</span>
-                  </div>
-                </div>
-                <div style={{ display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" }}>
-                  <div style={{ fontSize:12,color:"#8B6344" }}>
-                    <span style={{ fontWeight:600 }}>Raised:</span> {row.dateRaised}
-                  </div>
-                  <div style={{ fontSize:12,color:"#8B6344" }}>
-                    <span style={{ fontWeight:600 }}>Due:</span> {row.expectedDelivery}
-                  </div>
-                  <StockStatusBadge row={row} />
-                </div>
-                <div style={{ display:"flex",gap:6,alignItems:"center" }}>
-                  {row.status!=="Received" && (
-                    <button onClick={()=>markReceived(row.id)} title="Mark as Received" style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:"#2D5016",border:"none",borderRadius:7,cursor:"pointer",color:"#fff",fontSize:12,fontWeight:700 }}>
-                      <CheckIcon /> Received
-                    </button>
-                  )}
-                  <button onClick={()=>{setEdit(row);setModal(true);}} style={{ background:"#EEF5E8",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#4A7C2F",display:"flex",alignItems:"center" }}><EditIcon /></button>
-                  <button onClick={()=>setData(d=>d.filter(r=>r.id!==row.id))} style={{ background:"#FDECEA",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#C0392B",display:"flex",alignItems:"center" }}><TrashIcon /></button>
+              <div style={{ padding:"10px 12px",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",background:row.status==="Processed"?"#F0FDF4":"#fff",borderBottom:isCollapsed?"none":"1px solid #E5E7EB" }}>
+                <span onClick={()=>toggleCollapse(row.id)} style={{ fontWeight:700,color:"#111827",fontSize:14,whiteSpace:"nowrap",cursor:"pointer" }}>{row.supplier}</span>
+                <span onClick={()=>toggleCollapse(row.id)} style={{ fontFamily:"monospace",fontSize:12,background:"#FEF3C7",color:"#D97706",padding:"2px 8px",borderRadius:5,fontWeight:700,whiteSpace:"nowrap",cursor:"pointer" }}>{row.po}</span>
+                {row.reference && <span style={{ fontFamily:"monospace",fontSize:12,color:"#9CA3AF",whiteSpace:"nowrap" }}>{row.reference}</span>}
+                <span style={{ width:1,height:14,background:"#E5E7EB",flexShrink:0 }} />
+                <span style={{ fontSize:12,color:"#6B7280",whiteSpace:"nowrap" }}><span style={{ fontWeight:600 }}>Raised:</span> {row.dateRaised}</span>
+                <span style={{ fontSize:12,color:"#6B7280",whiteSpace:"nowrap" }}><span style={{ fontWeight:600 }}>Due:</span> {row.expectedDelivery}</span>
+                {row.receivedAt && <span style={{ fontSize:12,color:"#15803D",fontWeight:600,whiteSpace:"nowrap" }}>Rcvd: {new Date(row.receivedAt).toLocaleString("en-AU",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}</span>}
+                <StockStatusBadge row={row} />
+                <div style={{ marginLeft:"auto",display:"flex",gap:6,alignItems:"center",flexShrink:0 }}>
+                  <svg onClick={()=>toggleCollapse(row.id)} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ cursor:"pointer",transform:isCollapsed?"rotate(-90deg)":"rotate(0deg)",transition:"transform 0.2s",flexShrink:0 }}><polyline points="6 9 12 15 18 9"/></svg>
+                  <button onClick={()=>{setEdit(row);setModal(true);}} style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"5px 9px",cursor:"pointer",color:"#16A34A",display:"flex",alignItems:"center" }}><EditIcon /></button>
                 </div>
               </div>
 
               {/* Items table with per-item qty tracking */}
-              {row.items?.length>0 && (
-                <div style={{ padding:"12px 20px 0" }}>
-                  <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
+              {!isCollapsed && row.items?.length>0 && (
+                <div style={{ padding:"12px 16px 0", overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+                  <table style={{ width:"100%",minWidth:480,borderCollapse:"collapse",fontSize:13 }}>
                     <thead>
-                      <tr style={{ borderBottom:"1.5px solid #E8D9C4" }}>
+                      <tr style={{ borderBottom:"1px solid #E5E7EB" }}>
                         <th style={{...thS,padding:"7px 10px"}}>Item Code</th>
                         <th style={{...thS,padding:"7px 10px"}}>Description</th>
-                        <th style={{...thS,padding:"7px 10px",textAlign:"right"}}>Unit Cost</th>
                         <th style={{...thS,padding:"7px 10px",textAlign:"right"}}>Ordered</th>
                         <th style={{...thS,padding:"7px 10px",textAlign:"right"}}>Received</th>
                         <th style={{...thS,padding:"7px 10px",textAlign:"right"}}>Used</th>
@@ -369,18 +613,17 @@ function IncomingStockTab({ data, setData }) {
                         const remaining = Math.max(0, (Number(item.receivedQty)||0) - (Number(item.usedQty)||0));
                         return (
                           <tr key={item.id||i}>
-                            <td style={{ padding:"8px 10px",borderBottom:"1px solid #F0E8DC" }}>
-                              <span style={{ fontFamily:"monospace",fontSize:12,color:"#D4830A",fontWeight:700 }}>{item.code}</span>
+                            <td style={{ padding:"8px 10px",borderBottom:"1px solid #E5E7EB" }}>
+                              <span style={{ fontFamily:"monospace",fontSize:12,color:"#374151",fontWeight:700,background:"#F3F4F6",padding:"1px 6px",borderRadius:4 }}>{item.code}</span>
                             </td>
-                            <td style={{ padding:"8px 10px",color:"#2C2416",borderBottom:"1px solid #F0E8DC" }}>
+                            <td style={{ padding:"8px 10px",color:"#111827",borderBottom:"1px solid #E5E7EB" }}>
                               <div>{item.description}</div>
                               <ItemQtyBar ordered={item.qty} received={item.receivedQty} used={item.usedQty} />
                             </td>
-                            <td style={{ padding:"8px 10px",textAlign:"right",color:"#8B6344",fontWeight:600,borderBottom:"1px solid #F0E8DC" }}>{item.cost!=null&&item.cost!==""?`$${Number(item.cost).toFixed(2)}`:"—"}</td>
-                            <td style={{ padding:"8px 10px",textAlign:"right",color:"#8B6344",fontWeight:600,borderBottom:"1px solid #F0E8DC" }}>{item.qty}</td>
-                            <td style={{ padding:"8px 10px",textAlign:"right",color:"#4A7C2F",fontWeight:700,borderBottom:"1px solid #F0E8DC" }}>{item.receivedQty||0}</td>
-                            <td style={{ padding:"8px 10px",textAlign:"right",color:"#2D5016",fontWeight:700,borderBottom:"1px solid #F0E8DC" }}>{item.usedQty||0}</td>
-                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,borderBottom:"1px solid #F0E8DC",color:remaining>0?"#D4830A":"#9A8A74" }}>{remaining}</td>
+                            <td style={{ padding:"8px 10px",textAlign:"right",color:"#6B7280",fontWeight:600,borderBottom:"1px solid #E5E7EB" }}>{item.qty}</td>
+                            <td style={{ padding:"8px 10px",textAlign:"right",color:"#16A34A",fontWeight:700,borderBottom:"1px solid #E5E7EB" }}>{item.receivedQty||0}</td>
+                            <td style={{ padding:"8px 10px",textAlign:"right",color:"#15803D",fontWeight:700,borderBottom:"1px solid #E5E7EB" }}>{item.usedQty||0}</td>
+                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,borderBottom:"1px solid #E5E7EB",color:remaining>0?"#D97706":"#9CA3AF" }}>{remaining}</td>
                           </tr>
                         );
                       })}
@@ -392,13 +635,12 @@ function IncomingStockTab({ data, setData }) {
                         const totUsed = row.items.reduce((s,it)=>s+(Number(it.usedQty)||0),0);
                         const totRem = Math.max(0,totRec-totUsed);
                         return (
-                          <tr style={{ borderTop:"2px solid #E8D9C4",background:"#F5EDE333" }}>
-                            <td colSpan={2} style={{ padding:"8px 10px",fontSize:11,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.05em" }}>Total</td>
-                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#8B6344" }}>{(()=>{const t=row.items.reduce((s,it)=>s+(Number(it.cost)||0)*(Number(it.qty)||0),0);return t>0?`$${t.toFixed(2)}`:"—";})()}</td>
-                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#8B6344" }}>{totOrd}</td>
-                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#4A7C2F" }}>{totRec}</td>
-                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#2D5016" }}>{totUsed}</td>
-                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:totRem>0?"#D4830A":"#9A8A74" }}>{totRem}</td>
+                          <tr style={{ borderTop:"1px solid #E5E7EB",background:"#F9FAFB" }}>
+                            <td colSpan={3} style={{ padding:"8px 10px",fontSize:11,fontWeight:700,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.05em" }}>Total</td>
+                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#6B7280" }}>{totOrd}</td>
+                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#16A34A" }}>{totRec}</td>
+                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#15803D" }}>{totUsed}</td>
+                            <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:totRem>0?"#D97706":"#9CA3AF" }}>{totRem}</td>
                           </tr>
                         );
                       })()}
@@ -408,27 +650,41 @@ function IncomingStockTab({ data, setData }) {
               )}
 
               {/* Notes */}
-              {row.notes && (
-                <div style={{ margin:"12px 20px",background:"#FEF3DC",borderRadius:8,padding:"8px 12px",fontSize:13,color:"#8B6344",borderLeft:"3px solid #D4830A",fontStyle:"italic" }}>
+              {!isCollapsed && row.notes && (
+                <div style={{ margin:"12px 20px",background:"#FFFBEB",borderRadius:8,padding:"8px 12px",fontSize:13,color:"#92400E",borderLeft:"3px solid #D97706",fontStyle:"italic" }}>
                   📝 {row.notes}
                 </div>
               )}
-              <div style={{ height:12 }}/>
+              {!isCollapsed && <div style={{ height:12 }}/>}
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
-      {modal && <Modal title={edit?"Edit Purchase Order":"New Purchase Order"} onClose={close}><IncomingStockForm initial={edit} onSave={save} onClose={close} /></Modal>}
+      {modal && <Modal title={edit?"Edit Purchase Order":"New Purchase Order"} onClose={close} maxWidth={1100}><IncomingStockForm initial={edit} onSave={save} onClose={close} rawDefs={rawDefs} onMarkReceived={edit && edit.status!=="Processed" ? (form)=>{markReceived(edit.id, form.items);close();} : null} /></Modal>}
     </div>
   );
 }
 
-function ProductForm({ initial, onSave, onClose }) {
+function ProductForm({ initial, onSave, onClose, stockCodes }) {
   const [productId, setProductId] = useState(initial?.productId||"");
   const [description, setDescription] = useState(initial?.description||"");
   return (
     <div>
-      <Field label="Product ID"><input style={inp} value={productId} onChange={e=>setProductId(e.target.value)} placeholder="HB-001" /></Field>
+      <Field label="Product ID">
+        {stockCodes && stockCodes.length > 0 ? (
+          <select style={sel} value={productId} onChange={e => {
+            const sc = stockCodes.find(r => r.code === e.target.value);
+            setProductId(e.target.value);
+            if (sc && !description) setDescription(sc.description);
+          }}>
+            <option value="">— select code —</option>
+            {stockCodes.map(r => <option key={r.id} value={r.code}>{r.code}{r.description ? ` · ${r.description}` : ""}</option>)}
+          </select>
+        ) : (
+          <input style={inp} value={productId} onChange={e=>setProductId(e.target.value)} placeholder="HB-001" />
+        )}
+      </Field>
       <Field label="Description"><input style={inp} value={description} onChange={e=>setDescription(e.target.value)} placeholder="e.g. Nibble Box 25 Pack" /></Field>
       <SaveCancel onClose={onClose} onSave={()=>productId&&description&&onSave({productId,description})} />
     </div>
@@ -449,7 +705,7 @@ function BatchForm({ onSave, onClose }) {
   );
 }
 
-function ProductsTab({ data, setData, orders }) {
+function ProductsTab({ data, setData, orders, stockCodes }) {
   const [modal, setModal] = useState(null);
   const [edit, setEdit] = useState(null);
   const [batchTarget, setBatchTarget] = useState(null);
@@ -477,54 +733,54 @@ function ProductsTab({ data, setData, orders }) {
     <div>
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24 }}>
         <div>
-          <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#2C2416",fontFamily:"Georgia,serif" }}>Products</h2>
-          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9A8A74" }}>{data.length} product{data.length!==1?"s":""} · {totalUnits} total units across all batches</p>
+          <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#111827" }}>Products</h2>
+          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9CA3AF" }}>{data.length} product{data.length!==1?"s":""} · {totalUnits} total units across all batches</p>
         </div>
-        <button onClick={()=>setModal("product")} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:"#D4830A",color:"#fff",border:"none",borderRadius:10,cursor:"pointer",fontSize:14,fontWeight:700 }}>
+        <button onClick={()=>setModal("product")} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:"#15803D",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:14,fontWeight:700 }}>
           <PlusIcon /> Add Product
         </button>
       </div>
 
       {data.length===0 ? (
-        <div style={{ textAlign:"center",padding:"60px 0",color:"#9A8A74" }}><div style={{ fontSize:40,marginBottom:12 }}>🥜</div><p>No products added yet</p></div>
+        <div style={{ textAlign:"center",padding:"60px 0",color:"#9CA3AF" }}><div style={{ fontSize:40,marginBottom:12 }}>🥜</div><p>No products added yet</p></div>
       ) : (
         <div style={{ display:"flex",flexDirection:"column",gap:14 }}>
           {data.map(product=>{
             const totalQty = product.batches.reduce((s,b)=>s+b.qty,0);
             return (
-              <div key={product.id} style={{ background:"#FEFAF4",border:"1.5px solid #E8D9C4",borderRadius:14,overflow:"hidden" }}>
+              <div key={product.id} style={{ background:"#fff",border:"1px solid #E5E7EB",borderRadius:8,overflow:"hidden" }}>
                 {/* Product header row */}
-                <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,background:"#FDF6EC",borderBottom:"1px solid #E8D9C4",flexWrap:"wrap" }}>
-                  <span style={{ fontFamily:"monospace",fontSize:12,fontWeight:700,background:"#FEF3DC",color:"#D4830A",padding:"3px 9px",borderRadius:6 }}>{product.productId}</span>
-                  <span style={{ fontWeight:700,color:"#2C2416",fontSize:15,flex:1 }}>{product.description}</span>
+                <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,background:"#F9FAFB",borderBottom:"1px solid #E5E7EB",flexWrap:"wrap" }}>
+                  <span style={{ fontFamily:"monospace",fontSize:12,fontWeight:700,background:"#FEF3C7",color:"#D97706",padding:"3px 9px",borderRadius:6 }}>{product.productId}</span>
+                  <span style={{ fontWeight:700,color:"#111827",fontSize:15,flex:1 }}>{product.description}</span>
                   <div style={{ display:"flex",alignItems:"center",gap:16,marginLeft:"auto" }}>
                     <div style={{ textAlign:"right" }}>
-                      <div style={{ fontSize:10,color:"#9A8A74",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em" }}>Total Stock</div>
-                      <div style={{ fontSize:22,fontWeight:800,color:"#2D5016",lineHeight:1 }}>{totalQty}</div>
+                      <div style={{ fontSize:10,color:"#9CA3AF",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em" }}>Total Stock</div>
+                      <div style={{ fontSize:22,fontWeight:800,color:"#15803D",lineHeight:1 }}>{totalQty}</div>
                     </div>
                     <div style={{ display:"flex",gap:6 }}>
-                      <button onClick={()=>{setBatchTarget(product.id);setModal("batch");}} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:"#EEF5E8",border:"none",borderRadius:7,cursor:"pointer",color:"#4A7C2F",fontSize:12,fontWeight:700 }}>
+                      <button onClick={()=>{setBatchTarget(product.id);setModal("batch");}} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:"#F0FDF4",border:"none",borderRadius:7,cursor:"pointer",color:"#16A34A",fontSize:12,fontWeight:700 }}>
                         <PlusIcon /> Batch
                       </button>
-                      <button onClick={()=>{setEdit(product);setModal("product");}} style={{ background:"#EEF5E8",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#4A7C2F",display:"flex",alignItems:"center" }}><EditIcon /></button>
-                      <button onClick={()=>setData(d=>d.filter(p=>p.id!==product.id))} style={{ background:"#FDECEA",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#C0392B",display:"flex",alignItems:"center" }}><TrashIcon /></button>
+                      <button onClick={()=>{setEdit(product);setModal("product");}} style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#16A34A",display:"flex",alignItems:"center" }}><EditIcon /></button>
+                      <button onClick={()=>setData(d=>d.filter(p=>p.id!==product.id))} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
                     </div>
                   </div>
                 </div>
 
                 {/* Batch rows */}
                 {product.batches.length===0 ? (
-                  <div style={{ padding:"12px 20px",fontSize:13,color:"#9A8A74",fontStyle:"italic" }}>No batches yet — click "+ Batch" to add one</div>
+                  <div style={{ padding:"12px 20px",fontSize:13,color:"#9CA3AF",fontStyle:"italic" }}>No batches yet — click "+ Batch" to add one</div>
                 ) : (
                   <div style={{ padding:"12px 20px" }}>
                     <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
                       <thead>
-                        <tr style={{ borderBottom:"1px solid #E8D9C4" }}>
-                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:700,color:"#9A8A74",textTransform:"uppercase",letterSpacing:"0.06em" }}>Batch</th>
-                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:700,color:"#9A8A74",textTransform:"uppercase",letterSpacing:"0.06em" }}>Qty</th>
-                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:700,color:"#D4830A",textTransform:"uppercase",letterSpacing:"0.06em" }}>Allocated</th>
-                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:700,color:"#4A7C2F",textTransform:"uppercase",letterSpacing:"0.06em" }}>Available</th>
-                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:700,color:"#9A8A74",textTransform:"uppercase",letterSpacing:"0.06em" }}>Actions</th>
+                        <tr style={{ borderBottom:"1px solid #E5E7EB" }}>
+                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Batch</th>
+                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Qty</th>
+                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:600,color:"#D97706",textTransform:"uppercase",letterSpacing:"0.05em" }}>Allocated</th>
+                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:600,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.05em" }}>Available</th>
+                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -535,35 +791,35 @@ function ProductsTab({ data, setData, orders }) {
                           },0);
                           const available = Math.max(0, b.qty - allocated);
                           return (
-                            <tr key={b.batch} style={{ borderBottom:i<product.batches.length-1?"1px solid #E8D9C422":"none",background:isEditing?"#FEF3DC":"transparent" }}>
+                            <tr key={b.batch} style={{ borderBottom:i<product.batches.length-1?"1px solid #E5E7EB":"none",background:isEditing?"#FEF3C7":"transparent" }}>
                               <td style={{ padding:"6px 10px" }}>
                                 {isEditing
                                   ? <input autoFocus style={{...inp,fontFamily:"monospace",fontWeight:700,padding:"5px 8px",fontSize:13,width:160}} value={editingBatch.batch} onChange={e=>setEditingBatch(eb=>({...eb,batch:e.target.value}))} />
-                                  : <span style={{ fontFamily:"monospace",fontWeight:700,color:"#2C2416",background:"#EEF5E8",padding:"2px 8px",borderRadius:5 }}>{b.batch}</span>
+                                  : <span style={{ fontFamily:"monospace",fontWeight:700,color:"#111827",background:"#F0FDF4",padding:"2px 8px",borderRadius:5 }}>{b.batch}</span>
                                 }
                               </td>
                               <td style={{ padding:"6px 10px",textAlign:"right" }}>
                                 {isEditing
                                   ? <input style={{...inp,textAlign:"right",fontWeight:800,padding:"5px 8px",fontSize:14,width:80}} type="number" min="0" value={editingBatch.qty} onChange={e=>setEditingBatch(eb=>({...eb,qty:e.target.value}))} />
-                                  : <span style={{ fontWeight:800,fontSize:16,color:"#4A7C2F" }}>{b.qty}</span>
+                                  : <span style={{ fontWeight:800,fontSize:16,color:"#16A34A" }}>{b.qty}</span>
                                 }
                               </td>
                               <td style={{ padding:"6px 10px",textAlign:"right" }}>
-                                <span style={{ fontWeight:700,fontSize:14,color:allocated>0?"#D4830A":"#C8C0B4" }}>{allocated>0?allocated:"—"}</span>
+                                <span style={{ fontWeight:700,fontSize:14,color:allocated>0?"#D97706":"#D1D5DB" }}>{allocated>0?allocated:"—"}</span>
                               </td>
                               <td style={{ padding:"6px 10px",textAlign:"right" }}>
-                                <span style={{ fontWeight:700,fontSize:14,color:available<=0?"#C0392B":available<5?"#D4830A":"#4A7C2F" }}>{available}</span>
+                                <span style={{ fontWeight:700,fontSize:14,color:available<=0?"#DC2626":available<5?"#D97706":"#16A34A" }}>{available}</span>
                               </td>
                               <td style={{ padding:"6px 8px",textAlign:"right" }}>
                                 {isEditing ? (
                                   <div style={{ display:"flex",gap:4,justifyContent:"flex-end" }}>
-                                    <button onClick={updateBatch} style={{ background:"#2D5016",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
-                                    <button onClick={()=>setEditingBatch(null)} style={{ background:"none",border:"1px solid #E8D9C4",borderRadius:6,padding:"4px 8px",cursor:"pointer",color:"#9A8A74",fontSize:11 }}>Cancel</button>
+                                    <button onClick={updateBatch} style={{ background:"#15803D",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
+                                    <button onClick={()=>setEditingBatch(null)} style={{ background:"none",border:"1px solid #E5E7EB",borderRadius:6,padding:"4px 8px",cursor:"pointer",color:"#9CA3AF",fontSize:11 }}>Cancel</button>
                                   </div>
                                 ) : (
                                   <div style={{ display:"flex",gap:4,justifyContent:"flex-end" }}>
-                                    <button onClick={()=>setEditingBatch({pid:product.id,origBatch:b.batch,batch:b.batch,qty:String(b.qty)})} style={{ background:"none",border:"none",cursor:"pointer",color:"#4A7C2F",opacity:0.7,display:"flex",padding:3 }} title="Edit batch"><EditIcon /></button>
-                                    <button onClick={()=>deleteBatch(product.id,b.batch)} style={{ background:"none",border:"none",cursor:"pointer",color:"#C0392B",opacity:0.5,display:"flex",padding:3 }} title="Delete batch"><TrashIcon /></button>
+                                    <button onClick={()=>setEditingBatch({pid:product.id,origBatch:b.batch,batch:b.batch,qty:String(b.qty)})} style={{ background:"none",border:"none",cursor:"pointer",color:"#16A34A",opacity:0.7,display:"flex",padding:3 }} title="Edit batch"><EditIcon /></button>
+                                    <button onClick={()=>deleteBatch(product.id,b.batch)} style={{ background:"none",border:"none",cursor:"pointer",color:"#DC2626",opacity:0.5,display:"flex",padding:3 }} title="Delete batch"><TrashIcon /></button>
                                   </div>
                                 )}
                               </td>
@@ -580,7 +836,7 @@ function ProductsTab({ data, setData, orders }) {
         </div>
       )}
 
-      {modal==="product" && <Modal title={edit?"Edit Product":"Add Product"} onClose={close}><ProductForm initial={edit} onSave={saveProduct} onClose={close} /></Modal>}
+      {modal==="product" && <Modal title={edit?"Edit Product":"Add Product"} onClose={close}><ProductForm initial={edit} onSave={saveProduct} onClose={close} stockCodes={stockCodes} /></Modal>}
       {modal==="batch" && <Modal title="Add Batch" onClose={close}><BatchForm onSave={saveBatch} onClose={close} /></Modal>}
     </div>
   );
@@ -644,8 +900,8 @@ function ProductionForm({ initial, incomingStock, products, recipes, onSave, onC
   return (
     <div>
       {/* Output Product */}
-      <div style={{ background:"#FEF3DC",border:"1.5px solid #F0A830",borderRadius:10,padding:16,marginBottom:20 }}>
-        <div style={{ fontSize:11,fontWeight:700,color:"#D4830A",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:12 }}>① Output Product & Batch</div>
+      <div style={{ background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:8,padding:16,marginBottom:20 }}>
+        <div style={{ fontSize:11,fontWeight:700,color:"#D97706",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:12 }}>① Output Product & Batch</div>
         <Field label="Select Product">
           <select style={sel} value={productId} onChange={e=>{ setProductId(e.target.value); applyRecipe(e.target.value, qty); }}>
             <option value="">— Choose a product —</option>
@@ -657,9 +913,9 @@ function ProductionForm({ initial, incomingStock, products, recipes, onSave, onC
           {selectedProduct && <datalist id="batch-opts">{selectedProduct.batches.map(b=><option key={b.batch} value={b.batch}/>)}</datalist>}
           {selectedProduct?.batches.length>0 && (
             <div style={{ marginTop:8,display:"flex",gap:6,flexWrap:"wrap" }}>
-              <span style={{ fontSize:11,color:"#9A8A74",alignSelf:"center" }}>Existing:</span>
+              <span style={{ fontSize:11,color:"#9CA3AF",alignSelf:"center" }}>Existing:</span>
               {selectedProduct.batches.map(b=>(
-                <button key={b.batch} onClick={()=>setBatch(b.batch)} style={{ fontSize:11,padding:"3px 10px",borderRadius:6,border:"1.5px solid #E8D9C4",background:batch===b.batch?"#D4830A":"#FEFAF4",color:batch===b.batch?"#fff":"#8B6344",cursor:"pointer",fontFamily:"monospace",fontWeight:700 }}>
+                <button key={b.batch} onClick={()=>setBatch(b.batch)} style={{ fontSize:11,padding:"3px 10px",borderRadius:6,border:"1px solid #E5E7EB",background:batch===b.batch?"#D97706":"#F9FAFB",color:batch===b.batch?"#fff":"#6B7280",cursor:"pointer",fontFamily:"monospace",fontWeight:700 }}>
                   {b.batch} <span style={{ opacity:0.7,fontWeight:400 }}>({b.qty})</span>
                 </button>
               ))}
@@ -671,17 +927,17 @@ function ProductionForm({ initial, incomingStock, products, recipes, onSave, onC
 
       {/* Arrow */}
       <div style={{ display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20,gap:8 }}>
-        <div style={{ flex:1,height:2,background:"linear-gradient(to right,#E8D9C4,#4A7C2F)",borderRadius:2 }}/>
-        <span style={{ fontSize:11,fontWeight:700,color:"#4A7C2F",textTransform:"uppercase",letterSpacing:"0.1em",whiteSpace:"nowrap" }}>made from</span>
+        <div style={{ flex:1,height:2,background:"linear-gradient(to right,#E5E7EB,#16A34A)",borderRadius:2 }}/>
+        <span style={{ fontSize:11,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.1em",whiteSpace:"nowrap" }}>made from</span>
         <ArrowIcon />
-        <div style={{ flex:1,height:2,background:"linear-gradient(to right,#4A7C2F,#E8D9C4)",borderRadius:2 }}/>
+        <div style={{ flex:1,height:2,background:"linear-gradient(to right,#16A34A,#E5E7EB)",borderRadius:2 }}/>
       </div>
 
       {/* Stock Inputs */}
-      <div style={{ background:"#EEF5E8",border:"1.5px solid #8AB46A",borderRadius:10,padding:16,marginBottom:20 }}>
+      <div style={{ background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:8,padding:16,marginBottom:20 }}>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12 }}>
-          <div style={{ fontSize:11,fontWeight:700,color:"#4A7C2F",textTransform:"uppercase",letterSpacing:"0.07em" }}>② Incoming Stock Used</div>
-          <button onClick={addLine} style={{ display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:700,color:"#4A7C2F",background:"#fff",border:"1.5px solid #8AB46A",borderRadius:7,padding:"4px 10px",cursor:"pointer" }}>
+          <div style={{ fontSize:11,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.07em" }}>② Incoming Stock Used</div>
+          <button onClick={addLine} style={{ display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:700,color:"#16A34A",background:"#fff",border:"1px solid #86EFAC",borderRadius:7,padding:"4px 10px",cursor:"pointer" }}>
             <PlusIcon /> Add Stock Line
           </button>
         </div>
@@ -690,7 +946,7 @@ function ProductionForm({ initial, incomingStock, products, recipes, onSave, onC
             const selected = allStockItems.find(it=>it.stockId===Number(line.stockId)&&it.itemId===Number(line.itemId));
             const stockItem = incomingStock.find(s=>s.id===Number(line.stockId));
             return (
-              <div key={i} style={{ background:"#FEFAF4",borderRadius:8,padding:"10px 12px",border:"1px solid #E8D9C4" }}>
+              <div key={i} style={{ background:"#fff",borderRadius:8,padding:"10px 12px",border:"1px solid #E5E7EB" }}>
                 <div style={{ display:"grid",gridTemplateColumns:"1fr auto",gap:8,alignItems:"start" }}>
                   <div>
                     <label style={lbl}>Stock Item</label>
@@ -716,15 +972,15 @@ function ProductionForm({ initial, incomingStock, products, recipes, onSave, onC
                       <input style={inp} type="number" min="1" value={line.qty} onChange={e=>setLine(i,"qty",e.target.value)} placeholder="0" />
                     </div>
                     {stockLines.length>1 && (
-                      <button onClick={()=>removeLine(i)} style={{ background:"#FDECEA",border:"none",borderRadius:7,padding:"10px 10px",cursor:"pointer",color:"#C0392B",display:"flex",alignItems:"center",height:42,marginBottom:0 }}><TrashIcon /></button>
+                      <button onClick={()=>removeLine(i)} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"10px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center",height:42,marginBottom:0 }}><TrashIcon /></button>
                     )}
                   </div>
                 </div>
                 {selected && (
                   <div style={{ display:"flex",gap:12,marginTop:8,flexWrap:"wrap",alignItems:"center" }}>
-                    <span style={{ fontSize:11,color:"#9A8A74" }}>Supplier: <strong style={{color:"#2C2416"}}>{selected.supplier}</strong></span>
-                    <span style={{ fontFamily:"monospace",fontSize:11,background:"#FEF3DC",color:"#D4830A",padding:"1px 6px",borderRadius:4 }}>{selected.po}</span>
-                    <span style={{ fontSize:11,color:"#9A8A74" }}>Available: <strong style={{color:selected.available>0?"#D4830A":"#C0392B"}}>{selected.available}</strong></span>
+                    <span style={{ fontSize:11,color:"#9CA3AF" }}>Supplier: <strong style={{color:"#111827"}}>{selected.supplier}</strong></span>
+                    <span style={{ fontFamily:"monospace",fontSize:11,background:"#FEF3C7",color:"#D97706",padding:"1px 6px",borderRadius:4 }}>{selected.po}</span>
+                    <span style={{ fontSize:11,color:"#9CA3AF" }}>Available: <strong style={{color:selected.available>0?"#D97706":"#DC2626"}}>{selected.available}</strong></span>
                   </div>
                 )}
               </div>
@@ -734,7 +990,7 @@ function ProductionForm({ initial, incomingStock, products, recipes, onSave, onC
       </div>
 
       <SaveCancel onClose={onClose} onSave={()=>valid&&onSave({ stockLines:validLines.map(l=>({stockId:Number(l.stockId),itemId:Number(l.itemId),qty:Number(l.qty)})), productId, batch, qty:Number(qty) })} saveLabel={initial?"Save Changes":"Create Production Run"} />
-      {!valid && <p style={{ textAlign:"center",fontSize:12,color:"#9A8A74",marginTop:8 }}>Add at least one stock line and fill all product fields</p>}
+      {!valid && <p style={{ textAlign:"center",fontSize:12,color:"#9CA3AF",marginTop:8 }}>Add at least one stock line and fill all product fields</p>}
     </div>
   );
 }
@@ -743,54 +999,54 @@ function PrintModal({ row, incomingStock, onClose }) {
   if (!row) return null;
   const today = new Date().toLocaleDateString("en-AU",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
   return (
-    <div style={{ position:"fixed",inset:0,zIndex:2000,background:"rgba(44,36,22,0.6)",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(3px)" }}>
-      <div style={{ background:"#fff",borderRadius:16,width:"100%",maxWidth:720,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 64px rgba(0,0,0,0.3)" }}>
+    <div style={{ position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(3px)" }}>
+      <div style={{ background:"#fff",borderRadius:8,width:"100%",maxWidth:720,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.12)",border:"1px solid #E5E7EB" }}>
         {/* Toolbar — hidden on print */}
-        <div className="no-print" style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 24px",borderBottom:"1px solid #E8D9C4",background:"#FDF6EC" }}>
-          <span style={{ fontWeight:700,color:"#2C2416",fontSize:15 }}>Production Record — {row.batch}</span>
+        <div className="no-print" style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 24px",borderBottom:"1px solid #E5E7EB",background:"#F9FAFB" }}>
+          <span style={{ fontWeight:700,color:"#111827",fontSize:15 }}>Production Record — {row.batch}</span>
           <div style={{ display:"flex",gap:8 }}>
-            <button onClick={()=>window.print()} style={{ display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:"#2D5016",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:700 }}>
+            <button onClick={()=>window.print()} style={{ display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:"#15803D",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:700 }}>
               <PrintIcon /> Print / Save PDF
             </button>
-            <button onClick={onClose} style={{ padding:"8px 14px",background:"none",border:"1.5px solid #E8D9C4",borderRadius:8,cursor:"pointer",color:"#9A8A74",fontSize:13,fontWeight:600 }}>Close</button>
+            <button onClick={onClose} style={{ padding:"8px 14px",background:"none",border:"1px solid #E5E7EB",borderRadius:8,cursor:"pointer",color:"#9CA3AF",fontSize:13,fontWeight:600 }}>Close</button>
           </div>
         </div>
         {/* Printable content */}
-        <div id="print-area" style={{ padding:"32px 40px",fontFamily:"Georgia,serif",color:"#2C2416",fontSize:13 }}>
+        <div id="print-area" style={{ padding:"32px 40px",fontFamily:"system-ui,sans-serif",color:"#111827",fontSize:13 }}>
           <style>{`@media print { .no-print { display:none !important; } #print-area { padding: 20px !important; } }`}</style>
           {/* Header */}
           <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:8 }}>
             <div>
-              <div style={{ fontFamily:"Georgia,serif",fontWeight:800,color:"#2D5016",fontSize:24,lineHeight:1.1 }}>Production Record</div>
-              <div style={{ fontFamily:"system-ui",fontSize:11,color:"#9A8A74",marginTop:4 }}>Harvest Box Operations · {today}</div>
+              <div style={{ fontWeight:800,color:"#15803D",fontSize:24,lineHeight:1.1 }}>Production Record</div>
+              <div style={{ fontSize:11,color:"#9CA3AF",marginTop:4 }}>Harvest Box Operations · {today}</div>
             </div>
-            <div style={{ fontFamily:"Georgia,serif",fontWeight:800,color:"#2D5016",fontSize:18,letterSpacing:"0.04em",lineHeight:1.1,textAlign:"right" }}>HARVEST BOX<br/>OPERATIONS</div>
+            <div style={{ fontWeight:800,color:"#15803D",fontSize:18,letterSpacing:"0.04em",lineHeight:1.1,textAlign:"right" }}>HARVEST BOX<br/>OPERATIONS</div>
           </div>
-          <div style={{ height:2,background:"linear-gradient(to right,#2D5016,#E8D9C4)",borderRadius:2,margin:"16px 0 20px" }}/>
+          <div style={{ height:2,background:"linear-gradient(to right,#15803D,#E5E7EB)",borderRadius:2,margin:"16px 0 20px" }}/>
           {/* Meta grid */}
-          <div style={{ display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:1,background:"#E8D9C4",border:"1px solid #E8D9C4",borderRadius:10,overflow:"hidden",marginBottom:24 }}>
+          <div style={{ display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:1,background:"#E5E7EB",border:"1px solid #E5E7EB",borderRadius:8,overflow:"hidden",marginBottom:24 }}>
             {[
               {label:"Product",value:row.description,mono:false},
-              {label:"Product ID",value:row.productId,mono:true,color:"#5C3D1E",bg:"#F5EDE3"},
-              {label:"Batch",value:row.batch,mono:true,color:"#4A7C2F",bg:"#EEF5E8"},
+              {label:"Product ID",value:row.productId,mono:true,color:"#374151",bg:"#F3F4F6"},
+              {label:"Batch",value:row.batch,mono:true,color:"#16A34A",bg:"#F0FDF4"},
               {label:"Qty Produced",value:`${row.qty} units`,mono:false,big:true},
             ].map(m=>(
-              <div key={m.label} style={{ background:"#FEFAF4",padding:"12px 16px" }}>
-                <div style={{ fontFamily:"system-ui",fontSize:10,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5 }}>{m.label}</div>
+              <div key={m.label} style={{ background:"#fff",padding:"12px 16px" }}>
+                <div style={{ fontSize:10,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5 }}>{m.label}</div>
                 {m.mono
                   ? <span style={{ fontFamily:"monospace",fontWeight:700,fontSize:13,background:m.bg,color:m.color,padding:"2px 8px",borderRadius:4 }}>{m.value}</span>
-                  : <div style={{ fontWeight:700,fontSize:m.big?20:14,color:m.big?"#2D5016":"#2C2416" }}>{m.value}</div>
+                  : <div style={{ fontWeight:700,fontSize:m.big?20:14,color:m.big?"#15803D":"#111827" }}>{m.value}</div>
                 }
               </div>
             ))}
           </div>
           {/* Stock table */}
-          <div style={{ fontFamily:"system-ui",fontSize:11,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:8 }}>Incoming Stock Used</div>
-          <table style={{ width:"100%",borderCollapse:"collapse",fontFamily:"system-ui",fontSize:12,marginBottom:32 }}>
+          <div style={{ fontSize:11,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:8 }}>Incoming Stock Used</div>
+          <table style={{ width:"100%",borderCollapse:"collapse",fontSize:12,marginBottom:32 }}>
             <thead>
-              <tr style={{ background:"#F5EDE3" }}>
+              <tr style={{ background:"#F9FAFB" }}>
                 {["Item Code","Description","Supplier","PO #","Qty Used"].map((h,i)=>(
-                  <th key={h} style={{ padding:"8px 10px",textAlign:i===4?"right":"left",fontSize:10,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.06em",borderBottom:"2px solid #E8D9C4" }}>{h}</th>
+                  <th key={h} style={{ padding:"8px 10px",textAlign:i===4?"right":"left",fontSize:10,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.06em",borderBottom:"1px solid #E5E7EB" }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -799,32 +1055,32 @@ function PrintModal({ row, incomingStock, onClose }) {
                 const s = incomingStock.find(st=>st.id===line.stockId);
                 const it = s?.items?.find(it=>it.id===line.itemId);
                 return (
-                  <tr key={i} style={{ borderBottom:"1px solid #F0E8DC",background:i%2===0?"#fff":"#FEFAF4" }}>
-                    <td style={{ padding:"9px 10px",fontFamily:"monospace",fontWeight:700,color:"#D4830A",fontSize:11 }}>{it?.code||"—"}</td>
-                    <td style={{ padding:"9px 10px",color:"#2C2416",fontWeight:600 }}>{it?.description||"Unknown"}</td>
-                    <td style={{ padding:"9px 10px",color:"#8B6344" }}>{s?.supplier||"—"}</td>
-                    <td style={{ padding:"9px 10px",fontFamily:"monospace",fontSize:11,color:"#D4830A",fontWeight:700 }}>{s?.po||"—"}</td>
-                    <td style={{ padding:"9px 10px",textAlign:"right",fontWeight:800,color:"#2D5016" }}>{line.qty}</td>
+                  <tr key={i} style={{ borderBottom:"1px solid #E5E7EB",background:i%2===0?"#fff":"#F9FAFB" }}>
+                    <td style={{ padding:"9px 10px",fontFamily:"monospace",fontWeight:700,color:"#374151",fontSize:11 }}>{it?.code||"—"}</td>
+                    <td style={{ padding:"9px 10px",color:"#111827",fontWeight:600 }}>{it?.description||"Unknown"}</td>
+                    <td style={{ padding:"9px 10px",color:"#6B7280" }}>{s?.supplier||"—"}</td>
+                    <td style={{ padding:"9px 10px",fontFamily:"monospace",fontSize:11,color:"#D97706",fontWeight:700 }}>{s?.po||"—"}</td>
+                    <td style={{ padding:"9px 10px",textAlign:"right",fontWeight:800,color:"#15803D" }}>{line.qty}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
           {/* Signature section */}
-          <div style={{ fontFamily:"system-ui",fontSize:11,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:16 }}>Authorisation & Sign-off</div>
+          <div style={{ fontSize:11,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:16 }}>Authorisation & Sign-off</div>
           <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:24 }}>
             {["Produced by","Checked by","Authorised by"].map(label=>(
               <div key={label}>
-                <div style={{ fontFamily:"system-ui",fontSize:11,fontWeight:700,color:"#8B6344",marginBottom:6 }}>{label}</div>
-                <div style={{ height:56,borderBottom:"1.5px solid #2C2416",marginBottom:6 }}/>
-                <div style={{ fontFamily:"system-ui",fontSize:10,color:"#9A8A74" }}>Name / Signature</div>
-                <div style={{ height:28,borderBottom:"1px solid #E8D9C4",marginTop:16,marginBottom:4 }}/>
-                <div style={{ fontFamily:"system-ui",fontSize:10,color:"#9A8A74" }}>Date (DD/MM/YYYY)</div>
+                <div style={{ fontSize:11,fontWeight:600,color:"#6B7280",marginBottom:6 }}>{label}</div>
+                <div style={{ height:56,borderBottom:"1px solid #111827",marginBottom:6 }}/>
+                <div style={{ fontSize:10,color:"#9CA3AF" }}>Name / Signature</div>
+                <div style={{ height:28,borderBottom:"1px solid #E5E7EB",marginTop:16,marginBottom:4 }}/>
+                <div style={{ fontSize:10,color:"#9CA3AF" }}>Date (DD/MM/YYYY)</div>
               </div>
             ))}
           </div>
           {/* Footer */}
-          <div style={{ marginTop:32,paddingTop:12,borderTop:"1px solid #E8D9C4",fontFamily:"system-ui",fontSize:10,color:"#9A8A74",display:"flex",justifyContent:"space-between" }}>
+          <div style={{ marginTop:32,paddingTop:12,borderTop:"1px solid #E5E7EB",fontSize:10,color:"#9CA3AF",display:"flex",justifyContent:"space-between" }}>
             <span>© Harvest Box · harvestbox.com.au</span>
             <span>Production Record · {row.batch} · {row.productId}</span>
           </div>
@@ -892,7 +1148,7 @@ function ProductionTab({ data, setData, incomingStock, setIncomingStock, product
       return {...p,batches};
     }));
 
-    showToast(`✅ ${newQty} units → ${product?.description} [${form.batch}]`,"#4A7C2F");
+    showToast(`✅ ${newQty} units → ${product?.description} [${form.batch}]`,"#16A34A");
     close();
   };
 
@@ -907,7 +1163,7 @@ function ProductionTab({ data, setData, incomingStock, setIncomingStock, product
     setData(updatedRuns);
     // Recompute all usedQty from remaining runs
     recomputeUsedQty(updatedRuns, setIncoming);
-    showToast(`🗑️ ${row.qty} units removed from ${row.description} [${row.batch}]`,"#C0392B");
+    showToast(`🗑️ ${row.qty} units removed from ${row.description} [${row.batch}]`,"#DC2626");
   };
 
   const total = data.reduce((s,r)=>s+Number(r.qty||0),0);
@@ -918,49 +1174,49 @@ function ProductionTab({ data, setData, incomingStock, setIncomingStock, product
       <Toast toast={toast} />
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24 }}>
         <div>
-          <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#2C2416",fontFamily:"Georgia,serif" }}>Production</h2>
-          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9A8A74" }}>{data.length} run{data.length!==1?"s":""} · {total} units total</p>
+          <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#111827" }}>Production</h2>
+          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9CA3AF" }}>{data.length} run{data.length!==1?"s":""} · {total} units total</p>
         </div>
-        <button onClick={()=>canAdd&&setModal(true)} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:canAdd?"#5C3D1E":"#ccc",color:"#fff",border:"none",borderRadius:10,cursor:canAdd?"pointer":"not-allowed",fontSize:14,fontWeight:700 }}>
+        <button onClick={()=>canAdd&&setModal(true)} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:canAdd?"#15803D":"#D1D5DB",color:"#fff",border:"none",borderRadius:8,cursor:canAdd?"pointer":"not-allowed",fontSize:14,fontWeight:700 }}>
           <PlusIcon /> New Run
         </button>
       </div>
       {!canAdd && (
-        <div style={{ background:"#FEF3DC",border:"1.5px solid #F0A830",borderRadius:10,padding:14,marginBottom:20,fontSize:13,color:"#D4830A",fontWeight:600 }}>
+        <div style={{ background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:8,padding:14,marginBottom:20,fontSize:13,color:"#D97706",fontWeight:600 }}>
           ⚠️ You need both incoming stock and products before creating a production run.
         </div>
       )}
       {data.length===0 ? (
-        <div style={{ textAlign:"center",padding:"60px 0",color:"#9A8A74" }}><div style={{ fontSize:40,marginBottom:12 }}>⚙️</div><p>No production runs yet</p></div>
+        <div style={{ textAlign:"center",padding:"60px 0",color:"#9CA3AF" }}><div style={{ fontSize:40,marginBottom:12 }}>⚙️</div><p>No production runs yet</p></div>
       ) : (
         <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
           {data.map((row)=>(
-            <div key={row.id} style={{ background:"#FEFAF4",border:"1.5px solid #E8D9C4",borderRadius:14,overflow:"hidden" }}>
+            <div key={row.id} style={{ background:"#fff",border:"1px solid #E5E7EB",borderRadius:8,overflow:"hidden" }}>
               {/* Header */}
-              <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,background:"#FDF6EC",borderBottom:"1px solid #E8D9C4",flexWrap:"wrap" }}>
+              <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,background:"#F9FAFB",borderBottom:"1px solid #E5E7EB",flexWrap:"wrap" }}>
                 <div style={{ flex:1,minWidth:180 }}>
-                  <div style={{ fontSize:10,fontWeight:700,color:"#D4830A",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4 }}>Output Product</div>
-                  <div style={{ fontWeight:700,color:"#2C2416",fontSize:16 }}>{row.description}</div>
+                  <div style={{ fontSize:10,fontWeight:700,color:"#D97706",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4 }}>Output Product</div>
+                  <div style={{ fontWeight:700,color:"#111827",fontSize:16 }}>{row.description}</div>
                   <div style={{ display:"flex",gap:6,marginTop:5,alignItems:"center",flexWrap:"wrap" }}>
-                    <span style={{ fontFamily:"monospace",fontSize:12,background:"#F5EDE3",color:"#5C3D1E",padding:"2px 7px",borderRadius:5,fontWeight:700 }}>{row.productId}</span>
-                    <span style={{ fontFamily:"monospace",fontSize:12,background:"#EEF5E8",color:"#4A7C2F",padding:"2px 7px",borderRadius:5,fontWeight:700 }}>{row.batch}</span>
+                    <span style={{ fontFamily:"monospace",fontSize:12,background:"#F3F4F6",color:"#374151",padding:"2px 7px",borderRadius:5,fontWeight:700 }}>{row.productId}</span>
+                    <span style={{ fontFamily:"monospace",fontSize:12,background:"#F0FDF4",color:"#16A34A",padding:"2px 7px",borderRadius:5,fontWeight:700 }}>{row.batch}</span>
                   </div>
                 </div>
                 <div style={{ textAlign:"center",padding:"0 8px" }}>
-                  <div style={{ fontSize:10,fontWeight:700,color:"#9A8A74",textTransform:"uppercase",letterSpacing:"0.07em" }}>Produced</div>
-                  <div style={{ fontSize:30,fontWeight:800,color:"#4A7C2F",lineHeight:1 }}>{row.qty}</div>
-                  <div style={{ fontSize:11,color:"#9A8A74" }}>units</div>
+                  <div style={{ fontSize:10,fontWeight:700,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.07em" }}>Produced</div>
+                  <div style={{ fontSize:30,fontWeight:800,color:"#16A34A",lineHeight:1 }}>{row.qty}</div>
+                  <div style={{ fontSize:11,color:"#9CA3AF" }}>units</div>
                 </div>
                 <div style={{ display:"flex",gap:6,marginLeft:"auto" }}>
-                  <button onClick={()=>handlePrint(row)} title="Print production record" style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:"#F5EDE3",border:"none",borderRadius:7,cursor:"pointer",color:"#5C3D1E",fontSize:12,fontWeight:700 }}><PrintIcon /> Print</button>
-                  <button onClick={()=>{setEdit(row);setModal(true);}} style={{ background:"#EEF5E8",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#4A7C2F",display:"flex",alignItems:"center" }}><EditIcon /></button>
-                  <button onClick={()=>handleDelete(row, setIncomingStock)} style={{ background:"#FDECEA",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#C0392B",display:"flex",alignItems:"center" }}><TrashIcon /></button>
+                  <button onClick={()=>handlePrint(row)} title="Print production record" style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:"#F3F4F6",border:"none",borderRadius:7,cursor:"pointer",color:"#374151",fontSize:12,fontWeight:700 }}><PrintIcon /> Print</button>
+                  <button onClick={()=>{setEdit(row);setModal(true);}} style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#16A34A",display:"flex",alignItems:"center" }}><EditIcon /></button>
+                  <button onClick={()=>handleDelete(row, setIncomingStock)} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
                 </div>
               </div>
 
               {/* Stock lines */}
               <div style={{ padding:"12px 20px" }}>
-                <div style={{ fontSize:10,fontWeight:700,color:"#4A7C2F",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:8 }}>
+                <div style={{ fontSize:10,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:8 }}>
                   From {row.stockLines?.length || 0} Stock Item{row.stockLines?.length!==1?"s":""}
                 </div>
                 <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
@@ -968,18 +1224,18 @@ function ProductionTab({ data, setData, incomingStock, setIncomingStock, product
                     const s = incomingStock.find(st=>st.id===line.stockId);
                     const it = s?.items?.find(it=>it.id===line.itemId);
                     return (
-                      <div key={i} style={{ display:"flex",alignItems:"center",gap:10,background:"#EEF5E8",borderRadius:8,padding:"8px 12px",flexWrap:"wrap" }}>
+                      <div key={i} style={{ display:"flex",alignItems:"center",gap:10,background:"#F0FDF4",borderRadius:8,padding:"8px 12px",flexWrap:"wrap" }}>
                         <div style={{ flex:1,minWidth:140 }}>
-                          <div style={{ fontWeight:700,color:"#2C2416",fontSize:13 }}>{it?.description || "Unknown item"}</div>
+                          <div style={{ fontWeight:700,color:"#111827",fontSize:13 }}>{it?.description || "Unknown item"}</div>
                           <div style={{ display:"flex",gap:6,marginTop:3,flexWrap:"wrap",alignItems:"center" }}>
-                            <span style={{ fontFamily:"monospace",fontSize:11,background:"#F5EDE3",color:"#5C3D1E",padding:"1px 6px",borderRadius:4,fontWeight:700 }}>{it?.code}</span>
-                            <span style={{ fontFamily:"monospace",fontSize:11,background:"#FEF3DC",color:"#D4830A",padding:"1px 6px",borderRadius:4 }}>{s?.po}</span>
-                            <span style={{ fontSize:11,color:"#9A8A74" }}>{s?.supplier}</span>
+                            <span style={{ fontFamily:"monospace",fontSize:11,background:"#F3F4F6",color:"#374151",padding:"1px 6px",borderRadius:4,fontWeight:700 }}>{it?.code}</span>
+                            <span style={{ fontFamily:"monospace",fontSize:11,background:"#FEF3C7",color:"#D97706",padding:"1px 6px",borderRadius:4 }}>{s?.po}</span>
+                            <span style={{ fontSize:11,color:"#9CA3AF" }}>{s?.supplier}</span>
                           </div>
                         </div>
                         <div style={{ textAlign:"right" }}>
-                          <div style={{ fontSize:10,color:"#9A8A74",textTransform:"uppercase",letterSpacing:"0.05em" }}>Qty Used</div>
-                          <div style={{ fontSize:18,fontWeight:800,color:"#4A7C2F" }}>{line.qty}</div>
+                          <div style={{ fontSize:10,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Qty Used</div>
+                          <div style={{ fontSize:18,fontWeight:800,color:"#16A34A" }}>{line.qty}</div>
                         </div>
                       </div>
                     );
@@ -1008,7 +1264,364 @@ function ProductionTab({ data, setData, incomingStock, setIncomingStock, product
 }
 
 
-function SettingsTab({ products, incomingStock, recipes, setRecipes }) {
+function StocktakeTab({ products, incomingStock }) {
+  const printDate = new Date().toLocaleDateString("en-AU", { day:"2-digit", month:"short", year:"numeric" });
+
+  // Flatten all incoming stock line items with remaining qty
+  const rawItems = incomingStock.flatMap(s =>
+    (s.items || []).map(it => ({
+      supplier: s.supplier,
+      po:       s.po,
+      code:     it.code,
+      description: it.description,
+      ordered:  it.qty || 0,
+      used:     it.usedQty || 0,
+      remaining: (it.qty || 0) - (it.usedQty || 0),
+    }))
+  ).filter(it => it.ordered > 0);
+
+  // Products with batch totals
+  const productRows = products.map(p => ({
+    productId:   p.productId,
+    description: p.description,
+    batches:     p.batches || [],
+    total:       (p.batches || []).reduce((s, b) => s + (b.qty || 0), 0),
+  }));
+
+  const thStyle = { padding:"8px 12px", textAlign:"left", fontSize:10, fontWeight:600, color:"#9CA3AF", textTransform:"uppercase", letterSpacing:"0.07em", whiteSpace:"nowrap" };
+  const thR     = { ...thStyle, textAlign:"right" };
+  const td      = { padding:"10px 12px", fontSize:13, color:"#111827", borderBottom:"1px solid #E5E7EB" };
+  const tdR     = { ...td, textAlign:"right", fontWeight:600 };
+
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24, flexWrap:"wrap", gap:12 }}>
+        <div>
+          <h2 style={{ margin:0, fontSize:22, fontWeight:800, color:"#111827" }}>Stocktake</h2>
+          <p style={{ margin:"4px 0 0", fontSize:13, color:"#9CA3AF" }}>As at {printDate}</p>
+        </div>
+        <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 16px", background:"#15803D", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontSize:13, fontWeight:700 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print
+        </button>
+      </div>
+
+      {/* Raw Ingredients */}
+      <div style={{ marginBottom:32 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+          <div style={{ width:4, height:20, background:"#D97706", borderRadius:2 }}></div>
+          <h3 style={{ margin:0, fontSize:15, fontWeight:800, color:"#111827" }}>Raw Ingredients</h3>
+          <span style={{ fontSize:12, color:"#9CA3AF" }}>{rawItems.length} line items</span>
+        </div>
+        {rawItems.length === 0 ? (
+          <div style={{ padding:"24px", textAlign:"center", color:"#9CA3AF", background:"#fff", borderRadius:8, border:"1px solid #E5E7EB" }}>No incoming stock items found</div>
+        ) : (
+          <div className="responsive-table" style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:8, overflow:"hidden" }}>
+            <table style={{ width:"100%", borderCollapse:"collapse" }}>
+              <thead style={{ background:"#F9FAFB" }}>
+                <tr>
+                  <th style={thStyle}>Supplier / PO</th>
+                  <th style={thStyle}>Code</th>
+                  <th style={thStyle}>Description</th>
+                  <th style={thR}>Ordered</th>
+                  <th style={thR}>Used</th>
+                  <th style={thR}>Remaining</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rawItems.map((it, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? "transparent" : "#F9FAFB" }}>
+                    <td style={td}>
+                      <div style={{ fontWeight:600, color:"#374151" }}>{it.supplier}</div>
+                      {it.po && <div style={{ fontSize:11, color:"#9CA3AF", fontFamily:"monospace" }}>{it.po}</div>}
+                    </td>
+                    <td style={td}><span style={{ fontFamily:"monospace", fontSize:12, color:"#374151", fontWeight:700, background:"#F3F4F6", padding:"1px 6px", borderRadius:4 }}>{it.code || "—"}</span></td>
+                    <td style={td}>{it.description}</td>
+                    <td style={tdR}>{it.ordered}</td>
+                    <td style={tdR}>{it.used}</td>
+                    <td style={{ ...tdR, color: it.remaining <= 0 ? "#DC2626" : it.remaining < it.ordered * 0.2 ? "#D97706" : "#16A34A" }}>
+                      {it.remaining}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot style={{ background:"#F9FAFB", borderTop:"1px solid #E5E7EB" }}>
+                <tr>
+                  <td colSpan={3} style={{ ...td, fontWeight:700, color:"#374151" }}>Total</td>
+                  <td style={tdR}>{rawItems.reduce((s,it)=>s+it.ordered,0)}</td>
+                  <td style={tdR}>{rawItems.reduce((s,it)=>s+it.used,0)}</td>
+                  <td style={{ ...tdR, color:"#16A34A" }}>{rawItems.reduce((s,it)=>s+it.remaining,0)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Finished Products */}
+      <div>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+          <div style={{ width:4, height:20, background:"#16A34A", borderRadius:2 }}></div>
+          <h3 style={{ margin:0, fontSize:15, fontWeight:800, color:"#111827" }}>Finished Products</h3>
+          <span style={{ fontSize:12, color:"#9CA3AF" }}>{productRows.length} products</span>
+        </div>
+        {productRows.length === 0 ? (
+          <div style={{ padding:"24px", textAlign:"center", color:"#9CA3AF", background:"#fff", borderRadius:8, border:"1px solid #E5E7EB" }}>No products found</div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {productRows.map(p => (
+              <div key={p.productId} style={{ background:"#fff", border:`1px solid ${p.total > 0 ? "#86EFAC" : "#E5E7EB"}`, borderRadius:8, overflow:"hidden" }}>
+                <div style={{ padding:"12px 16px", display:"flex", alignItems:"center", gap:10, background: p.total > 0 ? "#F0FDF4" : "#F9FAFB", flexWrap:"wrap" }}>
+                  <span style={{ fontFamily:"monospace", fontSize:12, fontWeight:700, background:"#FEF3C7", color:"#D97706", padding:"3px 9px", borderRadius:6 }}>{p.productId}</span>
+                  <span style={{ fontWeight:700, color:"#111827", flex:1 }}>{p.description}</span>
+                  <span style={{ fontSize:14, fontWeight:800, color: p.total > 0 ? "#16A34A" : "#9CA3AF" }}>{p.total} units</span>
+                </div>
+                {p.batches.length > 0 && (
+                  <div style={{ padding:"8px 16px 12px" }}>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                      {p.batches.map((b, i) => (
+                        <span key={i} style={{ fontSize:12, fontFamily:"monospace", fontWeight:700, background: b.qty > 0 ? "#F0FDF4" : "#F9FAFB", color: b.qty > 0 ? "#16A34A" : "#9CA3AF", padding:"4px 10px", borderRadius:20, border:`1px solid ${b.qty > 0 ? "#86EFAC" : "#E5E7EB"}` }}>
+                          {b.batch} · {b.qty}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+const STOCK_TYPES = ["Food", "Cardboard", "Film", "Rewind"];
+const RAW_TYPES = ["Food", "Packaging", "Chemical", "Other"];
+
+function RawDefsTab({ data, setData }) {
+  const [modal, setModal] = useState(false);
+  const [edit, setEdit] = useState(null);
+  const [rawId, setRawId] = useState("");
+  const [desc, setDesc] = useState("");
+  const [rawType, setRawType] = useState("Food");
+  const [available, setAvailable] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const openNew = () => { setRawId(""); setDesc(""); setRawType("Food"); setAvailable(false); setEdit(null); setModal(true); };
+  const openEdit = (r) => { setRawId(r.raw_id); setDesc(r.description); setRawType(r.raw_type||"Food"); setAvailable(!!r.available); setEdit(r); setModal(true); };
+  const close = () => { setModal(false); setEdit(null); };
+  const save = () => {
+    if (!rawId.trim()) return;
+    if (edit) {
+      setData(d => d.map(r => r.id === edit.id ? { ...r, raw_id: rawId.trim(), description: desc, raw_type: rawType, available } : r));
+    } else {
+      setData(d => [...d, { id: Date.now(), raw_id: rawId.trim(), description: desc, raw_type: rawType, available }]);
+    }
+    close();
+  };
+
+  const filtered = data.filter(r => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (r.raw_id||"").toLowerCase().includes(q) || (r.description||"").toLowerCase().includes(q) || (r.raw_type||"").toLowerCase().includes(q);
+  });
+
+  const typeBadge = (t) => {
+    const colours = { Food:"#DCFCE7:#15803D", Packaging:"#FEF3C7:#D97706", Chemical:"#EDE9FE:#7C3AED", Other:"#F3F4F6:#6B7280" };
+    const [bg, color] = (colours[t] || "#F3F4F6:#6B7280").split(":");
+    return <span style={{ fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:10,background:bg,color }}>{t}</span>;
+  };
+
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:10 }}>
+        <div>
+          <h3 style={{ margin:0, fontSize:17, fontWeight:800, color:"#111827" }}>Raws</h3>
+          <p style={{ margin:"4px 0 0", fontSize:13, color:"#9CA3AF" }}>{data.length} raw material{data.length!==1?"s":""} defined</p>
+        </div>
+        <button onClick={openNew} style={{ display:"flex",alignItems:"center",gap:7,padding:"9px 16px",background:"#15803D",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:700 }}>
+          <PlusIcon /> Add Raw
+        </button>
+      </div>
+
+      <div style={{ position:"relative", marginBottom:14 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search ID, description, type…" style={{ width:"100%",padding:"8px 12px 8px 32px",borderRadius:8,border:"1px solid #E5E7EB",fontSize:13,background:"#fff",boxSizing:"border-box" }} />
+        {search && <button onClick={()=>setSearch("")} style={{ position:"absolute",right:9,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9CA3AF",fontSize:15,padding:0 }}>✕</button>}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div style={{ textAlign:"center", padding:"40px 0", color:"#9CA3AF" }}>
+          {data.length === 0 ? <p>No raws defined yet — click Add Raw to get started.</p> : <p>No results match your search.</p>}
+        </div>
+      ) : (
+        <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+          <table style={{ width:"100%", minWidth:420, borderCollapse:"collapse" }}>
+            <thead style={{ background:"#F9FAFB" }}>
+              <tr>
+                <th style={thS}>Raw ID</th>
+                <th style={thS}>Description</th>
+                <th style={thS}>Type</th>
+                <th style={{ ...thS, textAlign:"right" }}>Available</th>
+                <th style={{ ...thS, textAlign:"right" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r, i) => (
+                <tr key={r.id} style={{ background: i%2===0?"transparent":"#F9FAFB" }}>
+                  <td style={{ ...tdS(i), fontFamily:"monospace", color:"#374151", fontWeight:700, whiteSpace:"nowrap", background:"#F3F4F6" }}>{r.raw_id}</td>
+                  <td style={tdS(i)}>{r.description}</td>
+                  <td style={tdS(i)}>{typeBadge(r.raw_type||"Food")}</td>
+                  <td style={{ ...tdS(i), textAlign:"right" }}><span style={{ fontSize:11,fontWeight:700,padding:"2px 10px",borderRadius:20,background:r.available?"#DCFCE7":"#F3F4F6",color:r.available?"#15803D":"#9CA3AF" }}>{r.available?"Yes":"No"}</span></td>
+                  <td style={{ ...tdS(i), textAlign:"right" }}>
+                    <ActionBtns onEdit={() => openEdit(r)} onDelete={() => setData(d => d.filter(x => x.id !== r.id))} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {modal && (
+        <Modal title={edit ? "Edit Raw" : "Add Raw"} onClose={close}>
+          <Field label="Raw ID *">
+            <input style={inp} value={rawId} onChange={e=>setRawId(e.target.value)} placeholder="e.g. RAW-ALMOND-1KG" autoFocus />
+            {!rawId.trim() && <span style={{ fontSize:11,color:"#DC2626" }}>Raw ID is required</span>}
+          </Field>
+          <Field label="Description"><input style={inp} value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Roasted Almonds 1kg" /></Field>
+          <Field label="Raw Type">
+            <select style={sel} value={rawType} onChange={e=>setRawType(e.target.value)}>
+              {RAW_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </Field>
+          <Field label="Available">
+            <select style={sel} value={available?"yes":"no"} onChange={e=>setAvailable(e.target.value==="yes")}>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </Field>
+          <SaveCancel onClose={close} onSave={save} disabled={!rawId.trim()} />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function StockCodesTab({ data, setData }) {
+  const [modal, setModal] = useState(false);
+  const [edit, setEdit] = useState(null);
+  const [code, setCode] = useState("");
+  const [desc, setDesc] = useState("");
+  const [type, setType] = useState("Food");
+  const [available, setAvailable] = useState("");
+  const [search, setSearch] = useState("");
+
+  const openNew = () => { setCode(""); setDesc(""); setType("Food"); setAvailable(false); setEdit(null); setModal(true); };
+  const openEdit = (r) => { setCode(r.code); setDesc(r.description); setType(r.type||"Food"); setAvailable(!!r.available); setEdit(r); setModal(true); };
+  const close = () => { setModal(false); setEdit(null); };
+  const save = () => {
+    if (!code.trim()) return;
+    if (edit) {
+      setData(d => d.map(r => r.id === edit.id ? { ...r, code: code.trim(), description: desc, type, available } : r));
+    } else {
+      setData(d => [...d, { id: Date.now(), code: code.trim(), description: desc, type, available }]);
+    }
+    close();
+  };
+
+  const filtered = data.filter(r => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (r.code||"").toLowerCase().includes(q) || (r.description||"").toLowerCase().includes(q) || (r.type||"").toLowerCase().includes(q);
+  });
+
+  const typeBadge = (t) => {
+    const colours = { Food:"#DCFCE7:#15803D", Cardboard:"#FEF3C7:#D97706", Film:"#EDE9FE:#7C3AED", Rewind:"#FEE2E2:#DC2626" };
+    const [bg, color] = (colours[t] || "#F3F4F6:#6B7280").split(":");
+    return <span style={{ fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:10,background:bg,color }}>{t}</span>;
+  };
+
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:10 }}>
+        <div>
+          <h3 style={{ margin:0, fontSize:17, fontWeight:800, color:"#111827" }}>Products</h3>
+          <p style={{ margin:"4px 0 0", fontSize:13, color:"#9CA3AF" }}>{data.length} code{data.length!==1?"s":""}</p>
+        </div>
+        <button onClick={openNew} style={{ display:"flex",alignItems:"center",gap:7,padding:"9px 16px",background:"#15803D",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:700 }}>
+          <PlusIcon /> Add Code
+        </button>
+      </div>
+
+      <div style={{ position:"relative", marginBottom:14 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search code, description, type…" style={{ width:"100%",padding:"8px 12px 8px 32px",borderRadius:8,border:"1px solid #E5E7EB",fontSize:13,background:"#fff",boxSizing:"border-box" }} />
+        {search && <button onClick={()=>setSearch("")} style={{ position:"absolute",right:9,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9CA3AF",fontSize:15,padding:0 }}>✕</button>}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div style={{ textAlign:"center", padding:"40px 0", color:"#9CA3AF" }}>
+          {data.length === 0 ? <p>No stock codes yet — click Add Code to get started</p> : <p>No results match your search.</p>}
+        </div>
+      ) : (
+        <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+          <table style={{ width:"100%", minWidth:420, borderCollapse:"collapse" }}>
+            <thead style={{ background:"#F9FAFB" }}>
+              <tr>
+                <th style={thS}>Code</th>
+                <th style={thS}>Description</th>
+                <th style={thS}>Type</th>
+                <th style={{ ...thS, textAlign:"right" }}>Available</th>
+                <th style={{ ...thS, textAlign:"right" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r, i) => (
+                <tr key={r.id} style={{ background: i%2===0?"transparent":"#F9FAFB" }}>
+                  <td style={{ ...tdS(i), fontFamily:"monospace", color:"#374151", fontWeight:700, whiteSpace:"nowrap", background:"#F3F4F6" }}>{r.code}</td>
+                  <td style={tdS(i)}>{r.description}</td>
+                  <td style={tdS(i)}>{typeBadge(r.type||"Food")}</td>
+                  <td style={{ ...tdS(i), textAlign:"right" }}><span style={{ fontSize:11,fontWeight:700,padding:"2px 10px",borderRadius:20,background:r.available?"#DCFCE7":"#F3F4F6",color:r.available?"#15803D":"#9CA3AF" }}>{r.available?"Yes":"No"}</span></td>
+                  <td style={{ ...tdS(i), textAlign:"right" }}>
+                    <ActionBtns onEdit={() => openEdit(r)} onDelete={() => setData(d => d.filter(x => x.id !== r.id))} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {modal && (
+        <Modal title={edit ? "Edit Product" : "Add Product"} onClose={close}>
+          <Field label="Code *">
+            <input style={inp} value={code} onChange={e=>setCode(e.target.value)} placeholder="e.g. NUT-ALMOND-1KG" autoFocus />
+            {!code.trim() && <span style={{ fontSize:11,color:"#DC2626" }}>Code is required</span>}
+          </Field>
+          <Field label="Description"><input style={inp} value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Roasted Almonds 1kg" /></Field>
+          <Field label="Type">
+            <select style={sel} value={type} onChange={e=>setType(e.target.value)}>
+              {STOCK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </Field>
+          <Field label="Available">
+            <select style={sel} value={available?"yes":"no"} onChange={e=>setAvailable(e.target.value==="yes")}>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </Field>
+          <SaveCancel onClose={close} onSave={save} disabled={!code.trim()} />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes, setStockCodes, rawDefs, setRawDefs }) {
+  const [settingsTab, setSettingsTab] = useState("Recipes");
   const emptyLine = () => ({ stockId:"", itemId:"", pct:"" });
   const [editingId, setEditingId] = useState(null);
   const [lines, setLines] = useState([emptyLine()]);
@@ -1043,13 +1656,23 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes }) {
 
   return (
     <div>
-      <div style={{ marginBottom:24 }}>
-        <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#2C2416",fontFamily:"Georgia,serif" }}>Settings</h2>
-        <p style={{ margin:"4px 0 0",fontSize:13,color:"#9A8A74" }}>Define the stock ingredients that make up each product (Bill of Materials)</p>
+      <div style={{ marginBottom:20 }}>
+        <h2 style={{ margin:"0 0 16px",fontSize:22,fontWeight:800,color:"#111827" }}>Settings</h2>
+        <div style={{ display:"flex", gap:4, background:"#F3F4F6", borderRadius:8, padding:4, width:"fit-content" }}>
+          {["Recipes","Products","Raws","Stocktake"].map(t => (
+            <button key={t} onClick={() => setSettingsTab(t)} style={{ padding:"7px 20px", borderRadius:6, border:"none", cursor:"pointer", fontSize:13, fontWeight:700, background: settingsTab===t ? "#15803D" : "transparent", color: settingsTab===t ? "#fff" : "#6B7280", transition:"background 0.15s" }}>{t}</button>
+          ))}
+        </div>
       </div>
 
-      {products.length===0 ? (
-        <div style={{ textAlign:"center",padding:"60px 0",color:"#9A8A74" }}><div style={{ fontSize:40,marginBottom:12 }}>⚙️</div><p>Add products first before defining recipes</p></div>
+      {settingsTab === "Stocktake" ? (
+        <StocktakeTab products={products} incomingStock={incomingStock} />
+      ) : settingsTab === "Products" ? (
+        <StockCodesTab data={stockCodes} setData={setStockCodes} />
+      ) : settingsTab === "Raws" ? (
+        <RawDefsTab data={rawDefs} setData={setRawDefs} />
+      ) : products.length===0 ? (
+        <div style={{ textAlign:"center",padding:"60px 0",color:"#9CA3AF" }}><div style={{ fontSize:40,marginBottom:12 }}>⚙️</div><p>Add products first before defining recipes</p></div>
       ) : (
         <div style={{ display:"flex",flexDirection:"column",gap:14 }}>
           {products.map(product=>{
@@ -1060,17 +1683,17 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes }) {
             const isEditing = editingId===product.productId;
             const totalPct = lines.reduce((s,l)=>s+(Number(l.pct)||0),0);
             return (
-              <div key={product.productId} style={{ background:"#FEFAF4",border:`1.5px solid ${recipe.length>0?"#8AB46A":"#E8D9C4"}`,borderRadius:14,overflow:"hidden" }}>
+              <div key={product.productId} style={{ background:"#fff",border:`1px solid ${recipe.length>0?"#86EFAC":"#E5E7EB"}`,borderRadius:8,overflow:"hidden" }}>
                 {/* Header */}
-                <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,background:recipe.length>0?"#F2FAEE":"#FDF6EC",borderBottom:"1px solid #E8D9C4",flexWrap:"wrap" }}>
-                  <span style={{ fontFamily:"monospace",fontSize:12,fontWeight:700,background:"#FEF3DC",color:"#D4830A",padding:"3px 9px",borderRadius:6 }}>{product.productId}</span>
-                  <span style={{ fontWeight:700,color:"#2C2416",fontSize:15,flex:1 }}>{product.description}</span>
+                <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,background:recipe.length>0?"#F0FDF4":"#F9FAFB",borderBottom:"1px solid #E5E7EB",flexWrap:"wrap" }}>
+                  <span style={{ fontFamily:"monospace",fontSize:12,fontWeight:700,background:"#FEF3C7",color:"#D97706",padding:"3px 9px",borderRadius:6 }}>{product.productId}</span>
+                  <span style={{ fontWeight:700,color:"#111827",fontSize:15,flex:1 }}>{product.description}</span>
                   <div style={{ display:"flex",alignItems:"center",gap:8 }}>
                     {recipe.length>0 && !isEditing && (
-                      <span style={{ fontSize:12,color:"#4A7C2F",fontWeight:600,background:"#EEF5E8",padding:"3px 10px",borderRadius:20 }}>✓ {recipe.length} ingredient{recipe.length!==1?"s":""}</span>
+                      <span style={{ fontSize:12,color:"#16A34A",fontWeight:600,background:"#F0FDF4",padding:"3px 10px",borderRadius:20 }}>✓ {recipe.length} ingredient{recipe.length!==1?"s":""}</span>
                     )}
                     {!isEditing && (
-                      <button onClick={()=>startEdit(product.productId)} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 14px",background:"#5C3D1E",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700 }}>
+                      <button onClick={()=>startEdit(product.productId)} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 14px",background:"#15803D",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700 }}>
                         <EditIcon /> {recipe.length>0?"Edit Recipe":"Set Recipe"}
                       </button>
                     )}
@@ -1082,9 +1705,9 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes }) {
                   <div style={{ padding:"12px 20px" }}>
                     <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
                       <thead>
-                        <tr style={{ borderBottom:"1px solid #E8D9C4" }}>
+                        <tr style={{ borderBottom:"1px solid #E5E7EB" }}>
                           {["Item Code","Description","Unit Cost","% of Qty"].map((h,i)=>(
-                            <th key={h} style={{ padding:"6px 10px",textAlign:i>=2?"right":"left",fontSize:10,fontWeight:700,color:"#9A8A74",textTransform:"uppercase",letterSpacing:"0.06em" }}>{h}</th>
+                            <th key={h} style={{ padding:"6px 10px",textAlign:i>=2?"right":"left",fontSize:10,fontWeight:700,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.06em" }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -1093,19 +1716,19 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes }) {
                           const s=incomingStock.find(st=>st.id===Number(line.stockId));
                           const it=s?.items?.find(it=>it.id===Number(line.itemId));
                           return (
-                            <tr key={i} style={{ borderBottom:i<recipe.length-1?"1px solid #F0E8DC":"none" }}>
-                              <td style={{ padding:"8px 10px" }}><span style={{ fontFamily:"monospace",fontSize:11,color:"#D4830A",fontWeight:700 }}>{it?.code||"—"}</span></td>
-                              <td style={{ padding:"8px 10px",fontWeight:600,color:"#2C2416" }}>{it?.description||"—"}</td>
-                              <td style={{ padding:"8px 10px",textAlign:"right",color:"#8B6344",fontWeight:600 }}>{it?.cost!=null&&it?.cost!==""?`$${Number(it.cost).toFixed(2)}`:"—"}</td>
-                              <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#4A7C2F" }}>{line.pct}%</td>
+                            <tr key={i} style={{ borderBottom:i<recipe.length-1?"1px solid #E5E7EB":"none" }}>
+                              <td style={{ padding:"8px 10px" }}><span style={{ fontFamily:"monospace",fontSize:11,color:"#374151",fontWeight:700,background:"#F3F4F6",padding:"1px 6px",borderRadius:4 }}>{it?.code||"—"}</span></td>
+                              <td style={{ padding:"8px 10px",fontWeight:600,color:"#111827" }}>{it?.description||"—"}</td>
+                              <td style={{ padding:"8px 10px",textAlign:"right",color:"#6B7280",fontWeight:600 }}>{it?.cost!=null&&it?.cost!==""?`$${Number(it.cost).toFixed(2)}`:"—"}</td>
+                              <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#16A34A" }}>{line.pct}%</td>
                             </tr>
                           );
                         })}
                       </tbody>
                       <tfoot>
-                        <tr style={{ borderTop:"2px solid #E8D9C4",background:"#F5EDE333" }}>
-                          <td colSpan={3} style={{ padding:"7px 10px",fontSize:11,fontWeight:700,color:"#8B6344",textTransform:"uppercase" }}>Total</td>
-                          <td style={{ padding:"7px 10px",textAlign:"right",fontWeight:800,color:recipe.reduce((s,l)=>s+l.pct,0)===100?"#4A7C2F":"#D4830A" }}>{recipe.reduce((s,l)=>s+l.pct,0)}%</td>
+                        <tr style={{ borderTop:"1px solid #E5E7EB",background:"#F9FAFB" }}>
+                          <td colSpan={3} style={{ padding:"7px 10px",fontSize:11,fontWeight:700,color:"#6B7280",textTransform:"uppercase" }}>Total</td>
+                          <td style={{ padding:"7px 10px",textAlign:"right",fontWeight:800,color:recipe.reduce((s,l)=>s+l.pct,0)===100?"#16A34A":"#D97706" }}>{recipe.reduce((s,l)=>s+l.pct,0)}%</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -1118,19 +1741,19 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes }) {
                       const costPerGram = recipeWeight>0 ? totalCostPer * recipeWeight / 1000 : null;
                       return (
                         <div style={{ marginTop:10,display:"flex",gap:16,flexWrap:"wrap" }}>
-                          <div style={{ background:"#FEF3DC",border:"1px solid #F0A830",borderRadius:8,padding:"8px 14px",display:"flex",gap:20,alignItems:"center" }}>
+                          <div style={{ background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:8,padding:"8px 14px",display:"flex",gap:20,alignItems:"center" }}>
                             <div>
-                              <div style={{ fontSize:10,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>Product Weight</div>
-                              <div style={{ fontWeight:800,fontSize:16,color:"#D4830A" }}>{recipeWeight}{recipeWeightUnit}</div>
+                              <div style={{ fontSize:10,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>Product Weight</div>
+                              <div style={{ fontWeight:800,fontSize:16,color:"#D97706" }}>{recipeWeight}{recipeWeightUnit}</div>
                             </div>
                             <div>
-                              <div style={{ fontSize:10,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>Est. Ingredient Cost / Unit</div>
-                              <div style={{ fontWeight:800,fontSize:16,color:"#2D5016" }}>${totalCostPer.toFixed(4)}</div>
+                              <div style={{ fontSize:10,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>Est. Ingredient Cost / Unit</div>
+                              <div style={{ fontWeight:800,fontSize:16,color:"#15803D" }}>${totalCostPer.toFixed(4)}</div>
                             </div>
                             {costPerGram!=null && (
                               <div>
-                                <div style={{ fontSize:10,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>Cost / {recipeWeightUnit}</div>
-                                <div style={{ fontWeight:800,fontSize:16,color:"#2D5016" }}>${costPerGram.toFixed(4)}</div>
+                                <div style={{ fontSize:10,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>Cost / {recipeWeightUnit}</div>
+                                <div style={{ fontWeight:800,fontSize:16,color:"#15803D" }}>${costPerGram.toFixed(4)}</div>
                               </div>
                             )}
                           </div>
@@ -1140,15 +1763,15 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes }) {
                   </div>
                 )}
                 {!isEditing && recipe.length===0 && (
-                  <div style={{ padding:"12px 20px",fontSize:13,color:"#9A8A74",fontStyle:"italic" }}>No recipe defined — click "Set Recipe" to add ingredients</div>
+                  <div style={{ padding:"12px 20px",fontSize:13,color:"#9CA3AF",fontStyle:"italic" }}>No recipe defined — click "Set Recipe" to add ingredients</div>
                 )}
 
                 {/* Edit mode */}
                 {isEditing && (
-                  <div style={{ padding:"16px 20px",background:"#FFFDF8" }}>
-                    <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16,padding:"12px 14px",background:"#FEF3DC",border:"1.5px solid #F0A830",borderRadius:8 }}>
+                  <div style={{ padding:"16px 20px",background:"#FAFAFA" }}>
+                    <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16,padding:"12px 14px",background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:8 }}>
                       <div>
-                        <div style={{ fontSize:10,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5 }}>Product Weight</div>
+                        <div style={{ fontSize:10,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5 }}>Product Weight</div>
                         <div style={{ display:"flex",gap:6,alignItems:"center" }}>
                           <input style={{...inp,padding:"8px 10px",width:100}} type="number" min="0" step="0.1" value={weight} onChange={e=>setWeight(e.target.value)} placeholder="e.g. 250" />
                           <select style={{...sel,width:70,padding:"8px 6px"}} value={weightUnit} onChange={e=>setWeightUnit(e.target.value)}>
@@ -1160,10 +1783,10 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes }) {
                         </div>
                       </div>
                       <div style={{ display:"flex",alignItems:"center" }}>
-                        <div style={{ fontSize:11,color:"#8B6344" }}>Used to calculate <strong>cost per gram</strong> and total ingredient value for each production run.</div>
+                        <div style={{ fontSize:11,color:"#6B7280" }}>Used to calculate <strong>cost per gram</strong> and total ingredient value for each production run.</div>
                       </div>
                     </div>
-                    <div style={{ fontSize:11,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:12 }}>
+                    <div style={{ fontSize:11,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:12 }}>
                       Recipe Ingredients — enter % of production qty each stock item contributes
                     </div>
                     <div style={{ display:"flex",flexDirection:"column",gap:8,marginBottom:12 }}>
@@ -1186,10 +1809,10 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes }) {
                             </select>
                             <div style={{ display:"flex",alignItems:"center",gap:4 }}>
                               <input style={{...inp,textAlign:"right",padding:"9px 8px"}} type="number" min="0" max="100" step="0.1" value={line.pct} onChange={e=>setLine(i,"pct",e.target.value)} placeholder="0" />
-                              <span style={{ fontSize:14,fontWeight:700,color:"#8B6344",whiteSpace:"nowrap" }}>%</span>
+                              <span style={{ fontSize:14,fontWeight:700,color:"#6B7280",whiteSpace:"nowrap" }}>%</span>
                             </div>
                             {lines.length>1
-                              ? <button onClick={()=>removeLine(i)} style={{ background:"#FDECEA",border:"none",borderRadius:7,padding:"9px 10px",cursor:"pointer",color:"#C0392B",display:"flex",alignItems:"center" }}><TrashIcon /></button>
+                              ? <button onClick={()=>removeLine(i)} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"9px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
                               : <div style={{ width:36 }}/>
                             }
                           </div>
@@ -1198,16 +1821,16 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes }) {
                     </div>
                     <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
                       <div style={{ display:"flex",alignItems:"center",gap:12 }}>
-                        <button onClick={addLine} style={{ display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:700,color:"#4A7C2F",background:"#EEF5E8",border:"1.5px solid #8AB46A",borderRadius:7,padding:"6px 12px",cursor:"pointer" }}>
+                        <button onClick={addLine} style={{ display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:700,color:"#16A34A",background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:7,padding:"6px 12px",cursor:"pointer" }}>
                           <PlusIcon /> Add Ingredient
                         </button>
-                        <span style={{ fontSize:12,color:totalPct===100?"#4A7C2F":totalPct>100?"#C0392B":"#D4830A",fontWeight:700 }}>
+                        <span style={{ fontSize:12,color:totalPct===100?"#16A34A":totalPct>100?"#DC2626":"#D97706",fontWeight:700 }}>
                           Total: {totalPct.toFixed(1)}% {totalPct===100?"✓":totalPct>100?"(over 100%)":""}
                         </span>
                       </div>
                       <div style={{ display:"flex",gap:8 }}>
-                        <button onClick={cancelEdit} style={{ padding:"8px 16px",borderRadius:8,border:"1.5px solid #E8D9C4",background:"none",cursor:"pointer",color:"#9A8A74",fontSize:13,fontWeight:600 }}>Cancel</button>
-                        <button onClick={()=>saveRecipe(product.productId)} style={{ padding:"8px 16px",borderRadius:8,border:"none",background:"#2D5016",cursor:"pointer",color:"#fff",fontSize:13,fontWeight:700 }}>Save Recipe</button>
+                        <button onClick={cancelEdit} style={{ padding:"8px 16px",borderRadius:8,border:"1px solid #E5E7EB",background:"none",cursor:"pointer",color:"#9CA3AF",fontSize:13,fontWeight:600 }}>Cancel</button>
+                        <button onClick={()=>saveRecipe(product.productId)} style={{ padding:"8px 16px",borderRadius:8,border:"none",background:"#15803D",cursor:"pointer",color:"#fff",fontSize:13,fontWeight:700 }}>Save Recipe</button>
                       </div>
                     </div>
                   </div>
@@ -1292,16 +1915,16 @@ function OrderForm({ initial, products, onSave, onClose }) {
         <Field label="Notes"><input style={inp} value={notes} onChange={function(e){setNotes(e.target.value);}} placeholder="Optional notes" /></Field>
       </div>
 
-      <div style={{ background:"#EEF5E8",border:"1.5px solid #8AB46A",borderRadius:10,padding:16 }}>
+      <div style={{ background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:8,padding:16 }}>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12 }}>
-          <div style={{ fontSize:11,fontWeight:700,color:"#4A7C2F",textTransform:"uppercase",letterSpacing:"0.07em" }}>Line Items</div>
-          <button onClick={addItem} style={{ display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:700,color:"#4A7C2F",background:"#fff",border:"1.5px solid #8AB46A",borderRadius:7,padding:"4px 10px",cursor:"pointer" }}><PlusIcon /> Add Item</button>
+          <div style={{ fontSize:11,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.07em" }}>Line Items</div>
+          <button onClick={addItem} style={{ display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:700,color:"#16A34A",background:"#fff",border:"1px solid #86EFAC",borderRadius:7,padding:"4px 10px",cursor:"pointer" }}><PlusIcon /> Add Item</button>
         </div>
         <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
           {items.map(function(item, i) {
             const prod = products.find(function(p) { return p.productId === item.productId; });
             return (
-              <div key={item.id} style={{ background:"#FEFAF4",borderRadius:8,padding:"10px 12px",border:"1px solid #E8D9C4" }}>
+              <div key={item.id} style={{ background:"#fff",borderRadius:8,padding:"10px 12px",border:"1px solid #E5E7EB" }}>
                 <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr auto",gap:8,alignItems:"end" }}>
                   <Field label="Product">
                     <select style={sel} value={item.productId} onChange={function(e) {
@@ -1330,7 +1953,7 @@ function OrderForm({ initial, products, onSave, onClose }) {
                     <input style={inp} type="number" min="1" value={item.qty} onChange={function(e){setItem(i,"qty",e.target.value);}} placeholder="0" />
                   </Field>
                   {items.length > 1 && (
-                    <button onClick={function(){removeItem(i);}} style={{ background:"#FDECEA",border:"none",borderRadius:6,padding:"9px 10px",cursor:"pointer",color:"#C0392B",display:"flex",alignItems:"center",alignSelf:"end" }}><TrashIcon /></button>
+                    <button onClick={function(){removeItem(i);}} style={{ background:"#FEF2F2",border:"none",borderRadius:6,padding:"9px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center",alignSelf:"end" }}><TrashIcon /></button>
                   )}
                 </div>
               </div>
@@ -1340,8 +1963,8 @@ function OrderForm({ initial, products, onSave, onClose }) {
       </div>
 
       <div style={{ display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4 }}>
-        <button onClick={onClose} style={{ padding:"9px 18px",borderRadius:8,border:"1.5px solid #E8D9C4",background:"none",cursor:"pointer",color:"#9A8A74",fontSize:13,fontWeight:600 }}>Cancel</button>
-        <button onClick={handleSave} disabled={!valid} style={{ padding:"9px 18px",borderRadius:8,border:"none",background:valid?"#2D5016":"#ccc",cursor:valid?"pointer":"not-allowed",color:"#fff",fontSize:13,fontWeight:700 }}>
+        <button onClick={onClose} style={{ padding:"9px 18px",borderRadius:8,border:"1px solid #E5E7EB",background:"none",cursor:"pointer",color:"#6B7280",fontSize:13,fontWeight:600 }}>Cancel</button>
+        <button onClick={handleSave} disabled={!valid} style={{ padding:"9px 18px",borderRadius:8,border:"none",background:valid?"#15803D":"#D1D5DB",cursor:valid?"pointer":"not-allowed",color:"#fff",fontSize:13,fontWeight:700 }}>
           {initial ? "Update Order" : "Create Order"}
         </button>
       </div>
@@ -1395,24 +2018,24 @@ function OrdersTab({ data, setData, products }) {
   const save = function(form) {
     if (edit) {
       setData(function(d) { return d.map(function(o) { return o.id === edit.id ? Object.assign({}, o, form) : o; }); });
-      showToast("Order " + form.invoiceNumber + " updated", "#4A7C2F");
+      showToast("Order " + form.invoiceNumber + " updated", "#16A34A");
     } else {
       setData(function(d) { return d.concat([Object.assign({}, form, {id: Date.now()})]); });
-      showToast("Order " + form.invoiceNumber + " created", "#4A7C2F");
+      showToast("Order " + form.invoiceNumber + " created", "#16A34A");
     }
     close();
   };
 
   const deleteOrder = function(id) {
     setData(function(d) { return d.filter(function(o) { return o.id !== id; }); });
-    showToast("Order deleted", "#C0392B");
+    showToast("Order deleted", "#DC2626");
   };
 
   const STATUS_STYLE = {
-    Open:               { bg:"#F5EDE3",  color:"#8B6344", label:"Open" },
-    "Stock Allocated":  { bg:"#FEF3DC",  color:"#D4830A", label:"Stock Allocated" },
-    "Paper Work Attached": { bg:"#E8EEF5", color:"#3A5F8A", label:"Paper Work Attached" },
-    Collected:          { bg:"#EEF5E8",  color:"#4A7C2F", label:"Collected" },
+    Open:                  { bg:"#F9FAFB",  color:"#374151",  label:"Open" },
+    "Stock Allocated":     { bg:"#FEF3C7",  color:"#D97706",  label:"Stock Allocated" },
+    "Paper Work Attached": { bg:"#EFF6FF",  color:"#1D4ED8",  label:"Paper Work Attached" },
+    Collected:             { bg:"#F0FDF4",  color:"#15803D",  label:"Collected" },
   };
   const STATUS_LIST = ["Open","Stock Allocated","Paper Work Attached","Collected"];
 
@@ -1421,21 +2044,21 @@ function OrdersTab({ data, setData, products }) {
       <Toast toast={toast} />
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24,gap:16 }}>
         <div>
-          <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#2C2416",fontFamily:"Georgia,serif" }}>Orders</h2>
-          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9A8A74" }}>{(filterStatus ? data.filter(function(o){return o.status===filterStatus;}).length : data.length) + " order" + (data.length !== 1 ? "s" : "") + (filterStatus ? " · filtered by " + filterStatus : "")}</p>
+          <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#111827" }}>Orders</h2>
+          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9CA3AF" }}>{(filterStatus ? data.filter(function(o){return o.status===filterStatus;}).length : data.length) + " order" + (data.length !== 1 ? "s" : "") + (filterStatus ? " · filtered by " + filterStatus : "")}</p>
         </div>
         <div style={{ flex:1,maxWidth:320,position:"relative" }}>
-          <input value={search} onChange={function(e){setSearch(e.target.value);}} placeholder="Search by invoice, customer, product..." style={{ width:"100%",padding:"10px 36px 10px 14px",borderRadius:10,border:"1.5px solid #E8D9C4",fontSize:13,background:"#fff",boxSizing:"border-box" }} />
-          {search && <button onClick={function(){setSearch("");}} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9A8A74",fontSize:16,lineHeight:1,padding:0 }}>✕</button>}
+          <input value={search} onChange={function(e){setSearch(e.target.value);}} placeholder="Search by invoice, customer, product..." style={{ width:"100%",padding:"10px 36px 10px 14px",borderRadius:8,border:"1px solid #E5E7EB",fontSize:13,background:"#fff",boxSizing:"border-box" }} />
+          {search && <button onClick={function(){setSearch("");}} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9CA3AF",fontSize:16,lineHeight:1,padding:0 }}>✕</button>}
         </div>
       </div>
 
-      <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:24 }}>
+      <div className="status-grid-4">
         {STATUS_LIST.map(function(s) {
           const st = STATUS_STYLE[s];
           const count = data.filter(function(o){return o.status===s;}).length;
           return (
-            <div key={s} onClick={function(){toggleFilter(s);}} style={{ background:filterStatus===s?st.color:st.bg,border:"1.5px solid " + st.color,borderRadius:10,padding:"10px 14px",cursor:"pointer",transition:"background 0.15s" }}>
+            <div key={s} onClick={function(){toggleFilter(s);}} style={{ background:filterStatus===s?st.color:st.bg,border:"1px solid " + st.color,borderRadius:8,padding:"10px 14px",cursor:"pointer",transition:"background 0.15s" }}>
               <div style={{ fontSize:10,fontWeight:700,color:filterStatus===s?"#fff":st.color,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4 }}>{st.label}</div>
               <div style={{ fontSize:22,fontWeight:800,color:filterStatus===s?"#fff":st.color,lineHeight:1 }}>{count}</div>
               {filterStatus===s && <div style={{ fontSize:10,color:"#fff",opacity:0.8,marginTop:3 }}>click to clear</div>}
@@ -1445,10 +2068,10 @@ function OrdersTab({ data, setData, products }) {
       </div>
 
       {data.length === 0 ? (
-        <div style={{ textAlign:"center",padding:"60px 0",color:"#9A8A74" }}><div style={{ fontSize:40,marginBottom:12 }}>🧾</div><p>No orders yet</p></div>
+        <div style={{ textAlign:"center",padding:"60px 0",color:"#9CA3AF" }}><div style={{ fontSize:40,marginBottom:12 }}>🧾</div><p>No orders yet</p></div>
       ) : (
         <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
-          {filterStatus && <div style={{ fontSize:12,color:"#8B6344",marginBottom:4 }}>Showing <strong>{filterStatus}</strong> orders — <span onClick={function(){setFilterStatus(null);}} style={{ cursor:"pointer",textDecoration:"underline" }}>clear filter</span></div>}
+          {filterStatus && <div style={{ fontSize:12,color:"#6B7280",marginBottom:4 }}>Showing <strong>{filterStatus}</strong> orders — <span onClick={function(){setFilterStatus(null);}} style={{ cursor:"pointer",textDecoration:"underline" }}>clear filter</span></div>}
           {data.filter(function(o){
             if (filterStatus && o.status !== filterStatus) return false;
             if (search) {
@@ -1470,28 +2093,28 @@ function OrdersTab({ data, setData, products }) {
             const st = STATUS_STYLE[order.status] || STATUS_STYLE.Draft;
             const overdue = order.status !== "Collected" && order.dueDate && new Date(order.dueDate) < new Date();
             return (
-              <div key={order.id} style={{ background:"#FEFAF4",border:"1.5px solid " + (overdue ? "#C0392B" : "#E8D9C4"),borderRadius:14,overflow:"hidden" }}>
-                <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,background:overdue?"#FFF0EE":"#FDF6EC",borderBottom:"1px solid #E8D9C4",flexWrap:"wrap" }}>
+              <div key={order.id} style={{ background:"#fff",border:"1px solid " + (overdue ? "#DC2626" : "#E5E7EB"),borderRadius:8,overflow:"hidden" }}>
+                <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,background:overdue?"#FEF2F2":"#fff",borderBottom:"1px solid #E5E7EB",flexWrap:"wrap" }}>
                   <div style={{ flex:1,minWidth:180 }}>
                     <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:3 }}>
-                      <span onClick={function(){toggleCollapse(order.id);}} style={{ fontFamily:"monospace",fontSize:13,fontWeight:800,color:"#2C2416",cursor:"pointer",textDecoration:"underline dotted",userSelect:"none" }}>{order.invoiceNumber}</span>
-                      <span style={{ fontSize:11,color:"#9A8A74" }}>{collapsed[order.id] === false ? "▼" : "▶"}</span>
-                      <span style={{ fontWeight:700,color:"#5C3D1E",fontSize:14 }}>{order.customer}</span>
-                      {order.reference && <span style={{ fontSize:11,color:"#9A8A74",background:"#F0E8DC",padding:"1px 7px",borderRadius:10,fontFamily:"monospace" }}>{order.reference}</span>}
+                      <span onClick={function(){toggleCollapse(order.id);}} style={{ fontFamily:"monospace",fontSize:13,fontWeight:800,color:"#111827",cursor:"pointer",textDecoration:"underline dotted",userSelect:"none" }}>{order.invoiceNumber}</span>
+                      <span style={{ fontSize:11,color:"#9CA3AF" }}>{collapsed[order.id] === false ? "▼" : "▶"}</span>
+                      <span style={{ fontWeight:700,color:"#374151",fontSize:14 }}>{order.customer}</span>
+                      {order.reference && <span style={{ fontSize:11,color:"#9CA3AF",background:"#F3F4F6",padding:"1px 7px",borderRadius:10,fontFamily:"monospace" }}>{order.reference}</span>}
                       <button onClick={function(){
                           const idx = STATUS_LIST.indexOf(order.status);
                           const next = STATUS_LIST[(idx + 1) % STATUS_LIST.length];
                           setData(function(d){ return d.map(function(o){ return o.id===order.id ? Object.assign({},o,{status:next}) : o; }); });
                         }} title={"Advance to: " + STATUS_LIST[(STATUS_LIST.indexOf(order.status)+1) % STATUS_LIST.length]} style={{ fontSize:11,fontWeight:700,background:st.bg,color:st.color,padding:"2px 10px",borderRadius:20,border:"1px solid " + st.color,cursor:"pointer" }}>{st.label} →</button>
-                      {overdue && <span style={{ fontSize:11,fontWeight:700,background:"#FDECEA",color:"#C0392B",padding:"2px 8px",borderRadius:20 }}>Overdue</span>}
+                      {overdue && <span style={{ fontSize:11,fontWeight:700,background:"#FEF2F2",color:"#DC2626",padding:"2px 8px",borderRadius:20 }}>Overdue</span>}
                     </div>
-                    <div style={{ fontSize:11,color:"#9A8A74",marginTop:2 }}>
+                    <div style={{ fontSize:11,color:"#9CA3AF",marginTop:2 }}>
                       {order.date ? "Issued " + order.date : ""}{order.dueDate ? " · Due " + order.dueDate : ""}
                     </div>
                   </div>
                   <div style={{ display:"flex",gap:6,marginLeft:"auto",alignItems:"center" }}>
-                    <button onClick={function(){setEdit(order);setModal(true);}} style={{ background:"#EEF5E8",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#4A7C2F",display:"flex",alignItems:"center" }}><EditIcon /></button>
-                    <button onClick={function(){deleteOrder(order.id);}} style={{ background:"#FDECEA",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#C0392B",display:"flex",alignItems:"center" }}><TrashIcon /></button>
+                    <button onClick={function(){setEdit(order);setModal(true);}} style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#16A34A",display:"flex",alignItems:"center" }}><EditIcon /></button>
+                    <button onClick={function(){deleteOrder(order.id);}} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
                   </div>
                 </div>
 
@@ -1500,24 +2123,24 @@ function OrdersTab({ data, setData, products }) {
                     <div style={{ marginBottom:10 }}>
                       {inlineEdit && inlineEdit.orderId === order.id && inlineEdit.field === "notes" ? (
                         <div style={{ display:"flex",gap:6,alignItems:"center" }}>
-                          <input autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} placeholder="Add a note..." style={{ flex:1,fontSize:12,borderRadius:6,border:"1.5px solid #F0A830",padding:"6px 10px",background:"#FFFDF8" }} />
-                          <button onClick={saveInline} style={{ background:"#2D5016",border:"none",borderRadius:6,padding:"5px 12px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
-                          <button onClick={cancelInline} style={{ background:"none",border:"1px solid #E8D9C4",borderRadius:6,padding:"5px 8px",cursor:"pointer",color:"#9A8A74",fontSize:11 }}>Cancel</button>
+                          <input autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} placeholder="Add a note..." style={{ flex:1,fontSize:12,borderRadius:6,border:"1px solid #86EFAC",padding:"6px 10px",background:"#fff" }} />
+                          <button onClick={saveInline} style={{ background:"#15803D",border:"none",borderRadius:6,padding:"5px 12px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
+                          <button onClick={cancelInline} style={{ background:"none",border:"1px solid #E5E7EB",borderRadius:6,padding:"5px 8px",cursor:"pointer",color:"#9CA3AF",fontSize:11 }}>Cancel</button>
                         </div>
                       ) : (
-                        <div onClick={function(){startInline(order.id,"notes",order.notes||"",null);}} style={{ background:"#FEF3DC",border:"1px dashed #F0A830",borderRadius:7,padding:"7px 12px",fontSize:12,color:order.notes?"#8B6344":"#C4A870",cursor:"pointer",userSelect:"none" }}>
+                        <div onClick={function(){startInline(order.id,"notes",order.notes||"",null);}} style={{ background:"#FEF3C7",border:"1px dashed #F59E0B",borderRadius:7,padding:"7px 12px",fontSize:12,color:order.notes?"#92400E":"#9CA3AF",cursor:"pointer",userSelect:"none" }}>
                           {order.notes ? ("📝 " + order.notes) : "＋ Add note..."}
-                          <span style={{ fontSize:10,color:"#C4A870",marginLeft:6 }}>✎</span>
+                          <span style={{ fontSize:10,color:"#9CA3AF",marginLeft:6 }}>✎</span>
                         </div>
                       )}
                     </div>
                     <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
                       <thead>
-                        <tr style={{ borderBottom:"1px solid #E8D9C4" }}>
-                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:700,color:"#9A8A74",textTransform:"uppercase",letterSpacing:"0.06em" }}>Product ID</th>
-                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:700,color:"#9A8A74",textTransform:"uppercase",letterSpacing:"0.06em" }}>Description</th>
-                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:700,color:"#9A8A74",textTransform:"uppercase",letterSpacing:"0.06em" }}>Batch</th>
-                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:700,color:"#9A8A74",textTransform:"uppercase",letterSpacing:"0.06em" }}>Qty</th>
+                        <tr style={{ borderBottom:"1px solid #E5E7EB" }}>
+                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Product ID</th>
+                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Description</th>
+                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Batch</th>
+                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Qty</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1525,25 +2148,25 @@ function OrdersTab({ data, setData, products }) {
                           const isEditingBatch = inlineEdit && inlineEdit.orderId === order.id && inlineEdit.field === "batch" && inlineEdit.itemId === item.id;
                           const prod = products.find(function(p){return p.productId === item.productId;});
                           return (
-                            <tr key={item.id} style={{ borderBottom: i < order.items.length - 1 ? "1px solid #F0E8DC" : "none", background: i % 2 === 0 ? "transparent" : "#FEFAF4" }}>
-                              <td style={{ padding:"8px 10px" }}><span style={{ fontFamily:"monospace",fontSize:11,color:"#D4830A",fontWeight:700 }}>{item.productId}</span></td>
-                              <td style={{ padding:"8px 10px",fontWeight:600,color:"#2C2416" }}>{item.description}</td>
+                            <tr key={item.id} style={{ borderBottom: i < order.items.length - 1 ? "1px solid #E5E7EB" : "none", background: i % 2 === 0 ? "transparent" : "#F9FAFB" }}>
+                              <td style={{ padding:"8px 10px" }}><span style={{ fontFamily:"monospace",fontSize:11,color:"#374151",fontWeight:700,background:"#F3F4F6",padding:"1px 6px",borderRadius:4 }}>{item.productId}</span></td>
+                              <td style={{ padding:"8px 10px",fontWeight:600,color:"#111827" }}>{item.description}</td>
                               <td style={{ padding:"6px 10px" }}>
                                 {isEditingBatch ? (
                                   <div style={{ display:"flex",gap:4,alignItems:"center" }}>
                                     {prod && prod.batches && prod.batches.length > 0 ? (
-                                      <select autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} style={{ fontSize:12,fontWeight:700,borderRadius:6,border:"1.5px solid #8AB46A",padding:"3px 6px",background:"#fff",fontFamily:"monospace" }}>
+                                      <select autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} style={{ fontSize:12,fontWeight:700,borderRadius:6,border:"1px solid #86EFAC",padding:"3px 6px",background:"#fff",fontFamily:"monospace" }}>
                                         <option value="">— batch —</option>
                                         {prod.batches.map(function(b){return <option key={b.batch} value={b.batch}>{b.batch + " (" + b.qty + ")"}</option>;})}
                                       </select>
                                     ) : (
-                                      <input autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} style={{ fontSize:12,fontFamily:"monospace",fontWeight:700,borderRadius:6,border:"1.5px solid #8AB46A",padding:"3px 7px",width:140 }} />
+                                      <input autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} style={{ fontSize:12,fontFamily:"monospace",fontWeight:700,borderRadius:6,border:"1px solid #86EFAC",padding:"3px 7px",width:140 }} />
                                     )}
-                                    <button onClick={saveInline} style={{ background:"#2D5016",border:"none",borderRadius:6,padding:"3px 10px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
-                                    <button onClick={cancelInline} style={{ background:"none",border:"1px solid #E8D9C4",borderRadius:6,padding:"3px 7px",cursor:"pointer",color:"#9A8A74",fontSize:11 }}>Cancel</button>
+                                    <button onClick={saveInline} style={{ background:"#15803D",border:"none",borderRadius:6,padding:"3px 10px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
+                                    <button onClick={cancelInline} style={{ background:"none",border:"1px solid #E5E7EB",borderRadius:6,padding:"3px 7px",cursor:"pointer",color:"#9CA3AF",fontSize:11 }}>Cancel</button>
                                   </div>
                                 ) : (
-                                  <button onClick={function(){startInline(order.id,"batch",item.batch,item.id);}} style={{ fontFamily:"monospace",fontSize:11,background:"#EEF5E8",color:"#4A7C2F",padding:"2px 7px",borderRadius:4,fontWeight:700,border:"1px dashed #8AB46A",cursor:"pointer" }}>{item.batch || "set batch"} ✎</button>
+                                  <button onClick={function(){startInline(order.id,"batch",item.batch,item.id);}} style={{ fontFamily:"monospace",fontSize:11,background:"#F0FDF4",color:"#16A34A",padding:"2px 7px",borderRadius:4,fontWeight:700,border:"1px dashed #86EFAC",cursor:"pointer" }}>{item.batch || "set batch"} ✎</button>
                                 )}
                               </td>
                               <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:700 }}>{item.qty}</td>
@@ -1592,40 +2215,40 @@ function LoginScreen({ onLogin }) {
   const handleKey = function(e) { if (e.key === "Enter") handleLogin(); };
 
   return (
-    <div style={{ minHeight:"100vh",background:"#2D5016",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif" }}>
-      <div style={{ background:"#FEFAF4",borderRadius:20,padding:"48px 44px",width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.3)" }}>
+    <div style={{ minHeight:"100vh",background:"#15803D",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif" }}>
+      <div style={{ background:"#fff",borderRadius:12,padding:"48px 44px",width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.15)" }}>
         <div style={{ textAlign:"center",marginBottom:36 }}>
-          <div style={{ fontFamily:"Georgia,serif",fontWeight:800,color:"#2D5016",fontSize:26,letterSpacing:"0.04em",lineHeight:1.2,marginBottom:6 }}>HARVEST BOX</div>
-          <div style={{ fontSize:12,color:"#8AB46A",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase" }}>Operations</div>
-          <div style={{ width:48,height:3,background:"linear-gradient(to right,#2D5016,#D4830A)",borderRadius:2,margin:"16px auto 0" }}></div>
+          <div style={{ fontWeight:800,color:"#15803D",fontSize:26,letterSpacing:"0.04em",lineHeight:1.2,marginBottom:6 }}>HARVEST BOX</div>
+          <div style={{ fontSize:12,color:"#16A34A",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase" }}>Operations</div>
+          <div style={{ width:48,height:3,background:"linear-gradient(to right,#15803D,#16A34A)",borderRadius:2,margin:"16px auto 0" }}></div>
         </div>
 
         <div style={{ display:"flex",flexDirection:"column",gap:14 }}>
           <div>
-            <label style={{ fontSize:11,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.07em",display:"block",marginBottom:5 }}>Email</label>
+            <label style={{ fontSize:11,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.07em",display:"block",marginBottom:5 }}>Email</label>
             <input
               type="email"
               value={email}
               onChange={function(e){setEmail(e.target.value); setError("");}}
               onKeyDown={handleKey}
               placeholder="you@harvestbox.com.au"
-              style={{ width:"100%",padding:"11px 14px",borderRadius:9,border:"1.5px solid #E8D9C4",fontSize:14,background:"#fff",boxSizing:"border-box",outline:"none" }}
+              style={{ width:"100%",padding:"11px 14px",borderRadius:8,border:"1px solid #E5E7EB",fontSize:14,background:"#fff",boxSizing:"border-box",outline:"none" }}
             />
           </div>
           <div>
-            <label style={{ fontSize:11,fontWeight:700,color:"#8B6344",textTransform:"uppercase",letterSpacing:"0.07em",display:"block",marginBottom:5 }}>Password</label>
+            <label style={{ fontSize:11,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.07em",display:"block",marginBottom:5 }}>Password</label>
             <input
               type="password"
               value={password}
               onChange={function(e){setPassword(e.target.value); setError("");}}
               onKeyDown={handleKey}
               placeholder="••••••••"
-              style={{ width:"100%",padding:"11px 14px",borderRadius:9,border:"1.5px solid #E8D9C4",fontSize:14,background:"#fff",boxSizing:"border-box",outline:"none" }}
+              style={{ width:"100%",padding:"11px 14px",borderRadius:8,border:"1px solid #E5E7EB",fontSize:14,background:"#fff",boxSizing:"border-box",outline:"none" }}
             />
           </div>
 
           {error && (
-            <div style={{ background:"#FDECEA",border:"1px solid #E8A0A0",borderRadius:8,padding:"9px 12px",fontSize:13,color:"#C0392B",fontWeight:500 }}>
+            <div style={{ background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,padding:"9px 12px",fontSize:13,color:"#DC2626",fontWeight:500 }}>
               {error}
             </div>
           )}
@@ -1633,22 +2256,22 @@ function LoginScreen({ onLogin }) {
           <button
             onClick={handleLogin}
             disabled={loading}
-            style={{ marginTop:4,padding:"13px",borderRadius:10,border:"none",background:loading?"#8AB46A":"#2D5016",color:"#fff",fontSize:15,fontWeight:700,cursor:loading?"not-allowed":"pointer",letterSpacing:"0.03em" }}
+            style={{ marginTop:4,padding:"13px",borderRadius:8,border:"none",background:loading?"#86EFAC":"#15803D",color:"#fff",fontSize:15,fontWeight:700,cursor:loading?"not-allowed":"pointer",letterSpacing:"0.03em" }}
           >
             {loading ? "Signing in…" : "Sign In"}
           </button>
           <button
             onClick={function(){onLogin({access_token:"preview",user:{email:"preview@harvestbox.com.au"},preview:true});}}
-            style={{ marginTop:4,padding:"10px",borderRadius:10,border:"1.5px dashed #E8D9C4",background:"none",color:"#9A8A74",fontSize:12,fontWeight:600,cursor:"pointer",letterSpacing:"0.03em" }}
+            style={{ marginTop:4,padding:"10px",borderRadius:8,border:"1px dashed #E5E7EB",background:"none",color:"#9CA3AF",fontSize:12,fontWeight:600,cursor:"pointer",letterSpacing:"0.03em" }}
           >
             Preview Mode (no login)
           </button>
         </div>
 
-        <p style={{ textAlign:"center",fontSize:11,color:"#9A8A74",marginTop:28,marginBottom:0 }}>
+        <p style={{ textAlign:"center",fontSize:11,color:"#9CA3AF",marginTop:28,marginBottom:0 }}>
           Harvest Box · harvestbox.com.au
         </p>
-        <p style={{ textAlign:"center",fontSize:10,color:"#C4B8A8",marginTop:8,marginBottom:0 }}>
+        <p style={{ textAlign:"center",fontSize:10,color:"#D1D5DB",marginTop:8,marginBottom:0 }}>
           First time? Create your account in Supabase → Authentication → Users
         </p>
       </div>
@@ -1681,12 +2304,15 @@ export default function App() {
     setDbConnected(false);
   };
 
-  const [tab, setTab] = useState("Incoming Stock");
+  const [tab, setTab] = useState("Incoming PO");
   const [incomingStock, setIncomingStock] = useState([]);
+  const [stock, setStock] = useState([]);
   const [products, setProducts] = useState([]);
   const [production, setProduction] = useState([]);
   const [recipes, setRecipes] = useState({});
   const [orders, setOrders] = useState([]);
+  const [stockCodes, setStockCodes] = useState([]);
+  const [rawDefs, setRawDefs] = useState([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
 
@@ -1700,23 +2326,29 @@ export default function App() {
     setDataError("");
     Promise.all([
       supabase.from("incoming_stock").select("*"),
+      supabase.from("raws").select("*"),
       supabase.from("products").select("*"),
       supabase.from("production").select("*"),
       supabase.from("orders").select("*"),
       supabase.from("recipes").select("*"),
+      supabase.from("stockcodes").select("*"),
+      supabase.from("raw_defs").select("*"),
     ]).then(function(results) {
-      const [stock, prods, prod, ords, recs] = results;
-      if (stock.error) { setDataError("Could not load data: " + (stock.error.message || "Check Supabase tables exist.")); setDataLoading(false); return; }
+      const [incomingRes, stockRes, prods, prod, ords, recs, scRes, rdRes] = results;
+      if (incomingRes.error) { setDataError("Could not load data: " + (incomingRes.error.message || "Check Supabase tables exist.")); setDataLoading(false); return; }
       const parseJ = function(val) { if (!val) return val; try { return typeof val === "string" ? JSON.parse(val) : val; } catch { return val; } };
-      if (stock.data) setIncomingStock(stock.data.map(function(r){ return Object.assign({},r,{items:parseJ(r.items)||[]}); }));
-      if (prods.data) setProducts(prods.data.map(function(r){ return Object.assign({},r,{batches:parseJ(r.batches)||[]}); }));
-      if (prod.data) setProduction(prod.data.map(function(r){ return Object.assign({},r,{stockLines:parseJ(r.stockLines)||[]}); }));
-      if (ords.data) setOrders(ords.data.map(function(r){ return Object.assign({},r,{items:parseJ(r.items)||[]}); }));
+      if (incomingRes.data) setIncomingStock(incomingRes.data.map(function(r){ return Object.assign({},r,{items:parseJ(r.items)||[],dateRaised:r.dateraised||r.dateRaised||"",expectedDelivery:r.expecteddelivery||r.expectedDelivery||"",receivedAt:r.receivedat||r.receivedAt||null}); }));
+      if (stockRes.data) setStock(stockRes.data);
+      if (prods.data) setProducts(prods.data.map(function(r){ return Object.assign({},r,{batches:parseJ(r.batches)||[],productId:r.productid||r.productId||""}); }));
+      if (prod.data) setProduction(prod.data.map(function(r){ return Object.assign({},r,{stockLines:parseJ(r.stocklines||r.stockLines)||[],productId:r.productid||r.productId||""}); }));
+      if (ords.data) setOrders(ords.data.map(function(r){ return Object.assign({},r,{items:parseJ(r.items)||[],invoiceNumber:r.invoicenumber||r.invoiceNumber||"",dueDate:r.duedate||r.dueDate||""}); }));
       if (recs.data && recs.data.length > 0) {
         const recipeMap = {};
         recs.data.forEach(function(r){ recipeMap[r.product_id] = parseJ(r.recipe); });
         setRecipes(recipeMap);
       }
+      if (scRes.data) setStockCodes(scRes.data);
+      if (rdRes.data) setRawDefs(rdRes.data);
       setDbConnected(true);
       setDataLoading(false);
     }).catch(function(e){ setDataError("Could not connect to Supabase. Check your credentials."); setDataLoading(false); });
@@ -1728,25 +2360,141 @@ export default function App() {
     const payload = rows.map(function(r) {
       const copy = Object.assign({}, r);
       ["items","batches","stockLines"].forEach(function(k){ if (copy[k] && typeof copy[k] !== "string") copy[k] = JSON.stringify(copy[k]); });
+      // Normalise camelCase fields to DB lowercase column names
+      if (table === "orders") {
+        if (copy.invoiceNumber !== undefined) { copy.invoicenumber = copy.invoiceNumber; delete copy.invoiceNumber; }
+        if (copy.dueDate !== undefined) { copy.duedate = copy.dueDate; delete copy.dueDate; }
+      }
+      if (table === "incoming_stock") {
+        if (copy.dateRaised !== undefined) { copy.dateraised = copy.dateRaised; delete copy.dateRaised; }
+        if (copy.expectedDelivery !== undefined) { copy.expecteddelivery = copy.expectedDelivery; delete copy.expectedDelivery; }
+        if (copy.receivedAt !== undefined) { delete copy.receivedAt; }
+        if (copy.receivedat !== undefined) { delete copy.receivedat; }
+      }
+      if (table === "products") {
+        if (copy.productId !== undefined) { copy.productid = copy.productId; delete copy.productId; }
+      }
+      if (table === "production") {
+        if (copy.productId !== undefined) { copy.productid = copy.productId; delete copy.productId; }
+        if (copy.stockLines !== undefined) { copy.stocklines = copy.stockLines; delete copy.stockLines; }
+      }
       return copy;
     });
     const { error } = await supabase.from(table).upsert(payload);
     if (error) console.warn("Supabase save error:", table, error);
   }, [session, dbConnected]);
 
-  const syncSetIncomingStock = function(fn) { setIncomingStock(function(prev){ const next=typeof fn==="function"?fn(prev):fn; saveToDb("incoming_stock",next); return next; }); };
-  const syncSetProducts = function(fn) { setProducts(function(prev){ const next=typeof fn==="function"?fn(prev):fn; saveToDb("products",next); return next; }); };
-  const syncSetProduction = function(fn) { setProduction(function(prev){ const next=typeof fn==="function"?fn(prev):fn; saveToDb("production",next); return next; }); };
-  const syncSetOrders = function(fn) { setOrders(function(prev){ const next=typeof fn==="function"?fn(prev):fn; saveToDb("orders",next); return next; }); };
+  const updateStockRow = useCallback(async function(row) {
+    const isNew = !stock.find(function(r) { return r.id === row.id; });
+    if (isNew) {
+      setStock(function(prev) { return [...prev, row]; });
+    } else {
+      setStock(function(prev) { return prev.map(function(r) { return r.id === row.id ? row : r; }); });
+    }
+    if (session && !session.preview) {
+      const payload = {
+        id: row.id,
+        code: row.code,
+        description: row.description,
+        batch: row.batch,
+        best_before: row.best_before || null,
+        supplier: row.supplier,
+        po_number: row.po_number,
+        received_at: row.received_at || null,
+        qty_received: row.qty_received,
+        qty_available: row.qty_available,
+      };
+      const { error } = await supabase.from("raws").upsert(payload);
+      if (error) console.warn("Stock upsert error:", error);
+    }
+  }, [session, stock]);
+
+  const deleteRow = useCallback(async function(table, id, setter) {
+    setter(function(prev) { return prev.filter(function(r) { return r.id !== id; }); });
+    if (session && !session.preview) {
+      const { error } = await supabase.from(table).delete().eq("id", id);
+      if (error) console.warn("Delete error:", table, id, error);
+    }
+  }, [session]);
+
+  const makeSyncSet = function(setter, table) {
+    return function(fn) {
+      setter(function(prev) {
+        const next = typeof fn === "function" ? fn(prev) : fn;
+        saveToDb(table, next);
+        return next;
+      });
+    };
+  };
+  const syncSetIncomingStock = makeSyncSet(setIncomingStock, "incoming_stock");
+  const syncSetProducts      = makeSyncSet(setProducts,      "products");
+  const syncSetProduction    = makeSyncSet(setProduction,    "production");
+  const syncSetOrders        = makeSyncSet(setOrders,        "orders");
   const syncSetRecipes = function(fn) { setRecipes(function(prev){ const next=typeof fn==="function"?fn(prev):fn; const rows=Object.entries(next).map(function([k,v]){return {product_id:k,recipe:JSON.stringify(v)};}); saveToDb("recipes",rows); return next; }); };
+  const syncSetStock = makeSyncSet(setStock, "raws");
 
-  if (authLoading) return <div style={{ minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#2D5016",color:"#8AB46A",fontFamily:"Georgia,serif",fontSize:18 }}>Loading…</div>;
+  const handlePoReceived = useCallback(async function(po) {
+    const now = new Date().toISOString();
+    const newLots = (po.items || []).filter(it => it.code || it.description).map(function(item, i) {
+      return {
+        id: Date.now() + i,
+        code: item.code || "",
+        description: item.description || "",
+        qty_received: Number(item.receivedQty) || Number(item.qty) || 0,
+        qty_available: Number(item.receivedQty) || Number(item.qty) || 0,
+        po_id: po.id,
+        po_number: po.po || "",
+        supplier: po.supplier || "",
+        received_at: item.receivedAt || now,
+        batch: item.batch || "",
+        best_before: item.usedBy || null,
+      };
+    });
+    if (newLots.length === 0) return;
+    setStock(function(prev) { return [...prev, ...newLots]; });
+    if (session && !session.preview) {
+      const { error } = await supabase.from("raws").insert(newLots);
+      if (error) console.warn("Stock insert error:", error);
+    }
+  }, [session]);
+
+  const syncSetStockCodes = function(fn) {
+    setStockCodes(function(prev) {
+      const next = typeof fn === "function" ? fn(prev) : fn;
+      if (session && dbConnected && !session.preview) {
+        const nextIds = new Set(next.map(r => r.id));
+        prev.filter(r => !nextIds.has(r.id)).forEach(r => supabase.from("stockcodes").delete().eq("id", r.id));
+      }
+      const prevMap = new Map(prev.map(r => [r.id, r]));
+      const toUpsert = next.filter(r => { const o = prevMap.get(r.id); return !o || o.code !== r.code || o.description !== r.description || o.type !== r.type || o.available !== r.available; });
+      if (toUpsert.length > 0) saveToDb("stockcodes", toUpsert);
+      return next;
+    });
+  };
+
+  const syncSetRawDefs = function(fn) {
+    setRawDefs(function(prev) {
+      const next = typeof fn === "function" ? fn(prev) : fn;
+      if (session && dbConnected && !session.preview) {
+        const nextIds = new Set(next.map(r => r.id));
+        prev.filter(r => !nextIds.has(r.id)).forEach(r => supabase.from("raw_defs").delete().eq("id", r.id));
+      }
+      const prevMap = new Map(prev.map(r => [r.id, r]));
+      const toUpsert = next.filter(r => { const o = prevMap.get(r.id); return !o || o.raw_id !== r.raw_id || o.description !== r.description || o.raw_type !== r.raw_type || o.available !== r.available; });
+      if (toUpsert.length > 0) saveToDb("raw_defs", toUpsert);
+      return next;
+    });
+  };
+
+
+  if (authLoading) return <div style={{ minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#15803D",color:"#86EFAC",fontSize:18 }}>Loading…</div>;
   if (!session) return <LoginScreen onLogin={handleLogin} />;
-  if (dataLoading) return <div style={{ minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#FDF6EC",color:"#4A7C2F",fontFamily:"Georgia,serif",fontSize:18,flexDirection:"column",gap:12 }}><div>Loading data…</div>{dataError && <div style={{fontSize:13,color:"#C0392B",marginTop:8}}>{dataError}</div>}</div>;
+  if (dataLoading) return <div style={{ minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#F9FAFB",color:"#16A34A",fontSize:18,flexDirection:"column",gap:12 }}><div>Loading data…</div>{dataError && <div style={{fontSize:13,color:"#DC2626",marginTop:8}}>{dataError}</div>}</div>;
 
-  const counts = { "Incoming Stock":incomingStock.length, Products:products.length, Production:production.length, Orders:orders.length, Settings:null };
+  const counts = { "Incoming PO":incomingStock.length, Raws:stock.length, Products:products.length, Production:production.length, Orders:orders.length, Settings:null };
   const navIcons = {
-    "Incoming Stock": <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h14M5 8a2 2 0 1 0-4 0v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8m-14 0V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M12 12v4m-2-2h4"/></svg>,
+    "Incoming PO": <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h14M5 8a2 2 0 1 0-4 0v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8m-14 0V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M12 12v4m-2-2h4"/></svg>,
+    Raws: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
     Products: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>,
     Production: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>,
     Orders: <OrdersIcon />,
@@ -1755,48 +2503,81 @@ export default function App() {
   const totalUnits = products.reduce((s,p)=>s+p.batches.reduce((ss,b)=>ss+b.qty,0),0);
   return (
     <>
-      <style>{`* { box-sizing:border-box; } body { margin:0; font-family:system-ui,sans-serif; background:#FDF6EC; }`}</style>
+      <style>{`
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#F9FAFB; }
+        .app-body { display:flex; flex:1; }
+        .app-nav { width:220px; background:#fff; border-right:1px solid #E5E7EB; padding:20px 10px; display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+        .app-nav-btn { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:8px; border:none; cursor:pointer; text-align:left; font-size:14px; width:100%; }
+        .app-nav-label { flex:1; }
+        .app-main { flex:1; padding:32px; overflow-y:auto; min-width:0; }
+        .app-header-date { font-size:12px; color:#6B7280; }
+        .app-header-right { display:flex; align-items:center; gap:16px; }
+        .responsive-table { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        .status-grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px; }
+        .status-grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:24px; }
+        @media (max-width:768px) {
+          .app-body { flex-direction:column; }
+          .app-nav { width:100%; flex-direction:row; padding:0; border-right:none; border-top:1px solid #E5E7EB; position:fixed; bottom:0; left:0; right:0; z-index:200; background:#fff; gap:0; }
+          .app-nav-btn { flex-direction:column; gap:3px; padding:8px 2px; font-size:10px; border-radius:0; flex:1; justify-content:center; }
+          .app-nav-label { flex:none; }
+          .app-main { padding:16px; padding-bottom:80px; }
+          .app-header-date { display:none; }
+          .app-header-right { gap:8px; }
+          .status-grid-4 { grid-template-columns:repeat(2,1fr); }
+        }
+        @media (max-width:480px) {
+          .status-grid-4 { grid-template-columns:repeat(2,1fr); }
+          .app-main { padding:12px; padding-bottom:80px; }
+        }
+        /* Make all tables scrollable on small screens */
+        @media (max-width:768px) {
+          table { display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; white-space:nowrap; }
+          table thead, table tbody, table tr { display:table; width:100%; table-layout:fixed; }
+        }
+      `}</style>
       <div style={{ minHeight:"100vh",display:"flex",flexDirection:"column" }}>
-        <header style={{ background:"#2D5016",padding:"0 32px",display:"flex",alignItems:"center",justifyContent:"space-between",height:64,boxShadow:"0 2px 12px rgba(44,36,22,0.15)" }}>
+        <header style={{ background:"#fff",padding:"0 16px",display:"flex",alignItems:"center",justifyContent:"space-between",height:56,borderBottom:"1px solid #E5E7EB",boxShadow:"0 1px 3px rgba(0,0,0,0.06)",flexShrink:0 }}>
           <div style={{ display:"flex",alignItems:"center",gap:4 }}>
-            <div style={{ fontFamily:"Georgia,serif",fontWeight:800,color:"#fff",fontSize:20,letterSpacing:"0.04em",lineHeight:1 }}>HARVEST BOX</div>
-            <div style={{ width:1,height:22,background:"#8AB46A",margin:"0 8px" }}></div>
-            <div style={{ fontSize:11,color:"#8AB46A",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase" }}>Operations</div>
+            <div style={{ fontWeight:800,color:"#15803D",fontSize:18,letterSpacing:"0.04em",lineHeight:1 }}>HARVEST BOX</div>
+            <div style={{ width:1,height:20,background:"#E5E7EB",margin:"0 8px" }}></div>
+            <div style={{ fontSize:10,color:"#9CA3AF",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase" }}>Ops</div>
           </div>
-          <div style={{ display:"flex",alignItems:"center",gap:16 }}>
+          <div className="app-header-right">
             {isConfigured && <div style={{ display:"flex",alignItems:"center",gap:5,fontSize:11 }}>
-              <div style={{ width:7,height:7,borderRadius:"50%",background:dbConnected?"#8AB46A":"#F0A830" }}></div>
-              <span style={{ color:"#8AB46A" }}>{dbConnected?"Live":"Local"}</span>
+              <div style={{ width:7,height:7,borderRadius:"50%",background:dbConnected?"#16A34A":"#D97706" }}></div>
+              <span style={{ color:"#6B7280" }}>{dbConnected?"Live":"Local"}</span>
             </div>}
-            <div style={{ fontSize:12,color:"#8AB46A" }}>{new Date().toLocaleDateString("en-AU",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
-            <button onClick={handleSignOut} style={{ fontSize:12,color:"#8AB46A",background:"rgba(255,255,255,0.1)",border:"1px solid rgba(138,180,106,0.4)",borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Sign Out</button>
+            <div className="app-header-date">{new Date().toLocaleDateString("en-AU",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
+            <button onClick={handleSignOut} style={{ fontSize:12,color:"#374151",background:"#F3F4F6",border:"1px solid #E5E7EB",borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Sign Out</button>
           </div>
         </header>
 
-        <div style={{ display:"flex",flex:1 }}>
-          <nav style={{ width:220,background:"#FEFAF4",borderRight:"1.5px solid #E8D9C4",padding:"24px 12px",display:"flex",flexDirection:"column",gap:4 }}>
+        <div className="app-body">
+          <nav className="app-nav">
             {NAV.map(t=>{
               const active=t===tab;
               return (
-                <button key={t} onClick={()=>setTab(t)} style={{ display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:10,border:"none",cursor:"pointer",textAlign:"left",background:active?"#2D5016":"transparent",color:active?"#fff":"#8B6344",fontWeight:active?700:500,fontSize:14 }}>
-                  <span style={{ opacity:active?1:0.6 }}>{navIcons[t]}</span>
-                  <span style={{ flex:1 }}>{t}</span>
-                  {counts[t]!==null && <span style={{ fontSize:11,fontWeight:700,background:active?"rgba(255,255,255,0.2)":"#E8D9C4",color:active?"#fff":"#9A8A74",padding:"1px 7px",borderRadius:20 }}>{counts[t]}</span>}
+                <button key={t} onClick={()=>setTab(t)} className="app-nav-btn" style={{ background:active?"#F0FDF4":"transparent",color:active?"#15803D":"#6B7280",fontWeight:active?600:400 }}>
+                  <span style={{ opacity:active?1:0.6,flexShrink:0 }}>{navIcons[t]}</span>
+                  <span className="app-nav-label">{t}</span>
+                  {counts[t]!==null && <span style={{ fontSize:10,fontWeight:700,background:active?"#15803D":"#F3F4F6",color:active?"#fff":"#9CA3AF",padding:"1px 6px",borderRadius:20,flexShrink:0 }}>{counts[t]}</span>}
                 </button>
               );
             })}
           </nav>
-          <main style={{ flex:1,padding:32,overflowY:"auto" }}>
-            {tab==="Incoming Stock" && <IncomingStockTab data={incomingStock} setData={syncSetIncomingStock} />}
-            {tab==="Products" && <ProductsTab data={products} setData={syncSetProducts} orders={orders} />}
+          <main className="app-main">
+            {tab==="Incoming PO" && <IncomingStockTab data={incomingStock} setData={syncSetIncomingStock} rawDefs={rawDefs} setRawDefs={syncSetRawDefs} onDelete={id=>deleteRow("incoming_stock",id,setIncomingStock)} onReceived={handlePoReceived} />}
+            {tab==="Raws" && <StockTab data={stock} onDelete={id=>deleteRow("raws",id,setStock)} onUpdate={updateStockRow} stockCodes={stockCodes} />}
+            {tab==="Products" && <ProductsTab data={products} setData={syncSetProducts} orders={orders} stockCodes={stockCodes} />}
             {tab==="Production" && <ProductionTab data={production} setData={syncSetProduction} incomingStock={incomingStock} setIncomingStock={syncSetIncomingStock} products={products} setProducts={syncSetProducts} recipes={recipes} />}
             {tab==="Orders" && <OrdersTab data={orders} setData={syncSetOrders} products={products} />}
-            {tab==="Settings" && <SettingsTab products={products} incomingStock={incomingStock} recipes={recipes} setRecipes={syncSetRecipes} />}
+            {tab==="Settings" && <SettingsTab products={products} incomingStock={incomingStock} recipes={recipes} setRecipes={syncSetRecipes} stockCodes={stockCodes} setStockCodes={syncSetStockCodes} rawDefs={rawDefs} setRawDefs={syncSetRawDefs} />}
           </main>
         </div>
-        <footer style={{ borderTop:"1px solid #E8D9C4",padding:"12px 32px",display:"flex",justifyContent:"space-between",background:"#FEFAF4" }}>
-          <span style={{ fontSize:12,color:"#9A8A74" }}>© 2026 Harvest Box · harvestbox.com.au</span>
-          <span style={{ fontSize:12,color:"#9A8A74" }}>Operations Management System</span>
+        <footer style={{ borderTop:"1px solid #E5E7EB",padding:"12px 32px",display:"flex",justifyContent:"space-between",background:"#fff" }}>
+          <span style={{ fontSize:12,color:"#9CA3AF" }}>© 2026 Harvest Box · harvestbox.com.au</span>
+          <span style={{ fontSize:12,color:"#9CA3AF" }}>Operations Management System</span>
         </footer>
       </div>
     </>
