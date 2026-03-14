@@ -1651,6 +1651,8 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
   const [lines, setLines] = useState([emptyLine()]);
   const [weight, setWeight] = useState("");
   const [weightUnit, setWeightUnit] = useState("g");
+  const [newRecipeModal, setNewRecipeModal] = useState(false);
+  const [newRecipeProductId, setNewRecipeProductId] = useState("");
 
   const startEdit = (productId) => {
     const existing = recipes[productId] || {};
@@ -1661,6 +1663,14 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
     setEditingId(productId);
   };
   const cancelEdit = () => { setEditingId(null); setLines([emptyLine()]); setWeight(""); setWeightUnit("g"); };
+  const openNewRecipe = () => { setLines([emptyLine()]); setWeight(""); setWeightUnit("g"); setNewRecipeProductId(""); setNewRecipeModal(true); };
+  const closeNewRecipe = () => { setNewRecipeModal(false); setNewRecipeProductId(""); setLines([emptyLine()]); setWeight(""); setWeightUnit("g"); };
+  const saveNewRecipe = () => {
+    if (!newRecipeProductId) return;
+    const valid = lines.filter(l=>l.stockId&&l.itemId&&Number(l.pct)>0);
+    setRecipes(r=>({...r,[newRecipeProductId]:{ lines: valid.map(l=>({stockId:Number(l.stockId),itemId:Number(l.itemId),pct:Number(l.pct)})), weight: weight!==""?Number(weight):null, weightUnit }}));
+    closeNewRecipe();
+  };
   const saveRecipe = (productId) => {
     const valid = lines.filter(l=>l.stockId&&l.itemId&&Number(l.pct)>0);
     setRecipes(r=>({...r,[productId]:{
@@ -1698,6 +1708,47 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
       ) : products.length===0 ? (
         <div style={{ textAlign:"center",padding:"60px 0",color:"#9CA3AF" }}><div style={{ fontSize:40,marginBottom:12 }}>⚙️</div><p>Add products first before defining recipes</p></div>
       ) : (
+        <>
+        {newRecipeModal && (
+          <Modal title="New Recipe" onClose={closeNewRecipe}>
+            <Field label="Product *">
+              <select style={sel} value={newRecipeProductId} onChange={e=>setNewRecipeProductId(e.target.value)}>
+                <option value="">— select product —</option>
+                {products.map(p=><option key={p.productId} value={p.productId}>{p.productId} · {p.description}</option>)}
+              </select>
+            </Field>
+            <div style={{ display:"grid",gridTemplateColumns:"1fr 80px",gap:8,marginBottom:8 }}>
+              <Field label="Total Weight"><input style={inp} type="number" min="0" value={weight} onChange={e=>setWeight(e.target.value)} placeholder="e.g. 45" /></Field>
+              <Field label="Unit">
+                <select style={sel} value={weightUnit} onChange={e=>setWeightUnit(e.target.value)}>
+                  <option>g</option><option>kg</option><option>ml</option><option>L</option>
+                </select>
+              </Field>
+            </div>
+            <label style={lbl}>Ingredients</label>
+            {lines.map((line,i)=>(
+              <div key={i} style={{ display:"grid",gridTemplateColumns:"1fr 1fr 70px 32px",gap:6,marginBottom:6 }}>
+                <select style={{...sel,fontSize:12}} value={line.stockId} onChange={e=>setLine(i,"stockId",e.target.value)}>
+                  <option value="">PO</option>
+                  {incomingStock.map(s=><option key={s.id} value={s.id}>{s.po||s.supplier}</option>)}
+                </select>
+                <select style={{...sel,fontSize:12}} value={line.itemId} onChange={e=>setLine(i,"itemId",e.target.value)}>
+                  <option value="">Item</option>
+                  {(incomingStock.find(s=>String(s.id)===String(line.stockId))?.items||[]).map(it=><option key={it.id} value={it.id}>{it.code} — {it.description}</option>)}
+                </select>
+                <input style={{...inp,fontSize:12,textAlign:"right"}} type="number" min="0" max="100" value={line.pct} onChange={e=>setLine(i,"pct",e.target.value)} placeholder="%" />
+                <button onClick={()=>removeLine(i)} style={{ background:"#FEF2F2",border:"none",borderRadius:6,cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center",justifyContent:"center" }}><TrashIcon /></button>
+              </div>
+            ))}
+            <button onClick={addLine} style={{ fontSize:12,fontWeight:700,color:"#16A34A",background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:7,padding:"5px 12px",cursor:"pointer",marginBottom:12 }}>+ Add Ingredient</button>
+            <SaveCancel onClose={closeNewRecipe} onSave={saveNewRecipe} disabled={!newRecipeProductId} saveLabel="Create Recipe" />
+          </Modal>
+        )}
+        <div style={{ display:"flex",justifyContent:"flex-end",marginBottom:12 }}>
+          <button onClick={openNewRecipe} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:"#15803D",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:14,fontWeight:700 }}>
+            <PlusIcon /> New Recipe
+          </button>
+        </div>
         <div style={{ display:"flex",flexDirection:"column",gap:14 }}>
           {products.map(product=>{
             const recipeData = recipes[product.productId] || [];
@@ -1863,6 +1914,7 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
             );
           })}
         </div>
+        </>
       )}
     </div>
   );
