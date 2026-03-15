@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import { supabase } from "./lib/supabase";
 
 const SUPABASE_FUNCTIONS_URL = import.meta.env.VITE_SUPABASE_URL + "/functions/v1";
@@ -252,7 +252,7 @@ function ItemQtyBar({ ordered, received, used }) {
   );
 }
 
-function StockTab({ data, onDelete, onUpdate, stockCodes, rawDefs }) {
+function StockTab({ data, onDelete, onUpdate, stockCodes, rawDefs, production, incomingStock }) {
   const [search, setSearch] = useState("");
   const [editRow, setEditRow] = useState(null);
   const [form, setForm] = useState({});
@@ -289,6 +289,20 @@ function StockTab({ data, onDelete, onUpdate, stockCodes, rawDefs }) {
   const [collapsed, setCollapsed] = useState({});
   const toggle = (code) => setCollapsed(c => ({...c, [code]: c[code] !== false ? false : true}));
 
+  // Calculate qty used for a raw lot from production runs.
+  // Match: production stockLine.stockId === lot.po_id, and the PO item at stockLine.itemId has same code.
+  const calcUsed = (lot) => {
+    return (production||[]).reduce((total, run) => {
+      return total + (run.stockLines||[]).reduce((s, line) => {
+        if (Number(line.stockId) !== Number(lot.po_id)) return s;
+        const po = (incomingStock||[]).find(p => p.id === Number(line.stockId));
+        const item = (po?.items||[]).find(it => it.id === Number(line.itemId));
+        return item?.code === lot.code ? s + Number(line.qty) : s;
+      }, 0);
+    }, 0);
+  };
+  const calcAvail = (lot) => Math.max(0, (Number(lot.qty_received)||0) - calcUsed(lot));
+
   const allRows = data.filter(row => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -322,7 +336,7 @@ function StockTab({ data, onDelete, onUpdate, stockCodes, rawDefs }) {
   const typeGroups = allTypes.filter(t => typeMap[t]).map(t => ({ type: t, codeGroups: typeMap[t] }));
   const groups = codeGroups; // keep for totalAvail calc
 
-  const totalAvail = allRows.reduce((s,r)=>s+(Number(r.qty_available)||0),0);
+  const totalAvail = allRows.reduce((s,r)=>s+calcAvail(r),0);
   const thS = { textAlign:"left",fontWeight:600,color:"#6B7280",fontSize:11,textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap",padding:"8px 12px",background:"#F9FAFB" };
 
   const bbColour = (bb) => {
@@ -360,7 +374,7 @@ function StockTab({ data, onDelete, onUpdate, stockCodes, rawDefs }) {
       ) : (
         <div style={{ display:"flex",flexDirection:"column",gap:20 }}>
           {typeGroups.map(({ type, codeGroups: typeCodes }) => {
-            const typeAvail = typeCodes.reduce((s,cg)=>s+cg.lots.reduce((ss,r)=>ss+(Number(r.qty_available)||0),0),0);
+            const typeAvail = typeCodes.reduce((s,cg)=>s+cg.lots.reduce((ss,r)=>ss+calcAvail(r),0),0);
             return (
               <div key={type}>
                 <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:8 }}>
@@ -371,7 +385,7 @@ function StockTab({ data, onDelete, onUpdate, stockCodes, rawDefs }) {
                 <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
                   {typeCodes.map(group => {
                     const isOpen = collapsed[group.code] === false;
-                    const groupAvail = group.lots.reduce((s,r)=>s+(Number(r.qty_available)||0),0);
+                    const groupAvail = group.lots.reduce((s,r)=>s+calcAvail(r),0);
                     const groupRcvd  = group.lots.reduce((s,r)=>s+(Number(r.qty_received)||0),0);
                     return (
                       <div key={group.code} style={{ border:"1px solid #E5E7EB",borderRadius:8,overflow:"hidden",background:"#fff" }}>
@@ -410,7 +424,7 @@ function StockTab({ data, onDelete, onUpdate, stockCodes, rawDefs }) {
                                       {row.received_at ? new Date(row.received_at).toLocaleDateString("en-AU",{day:"2-digit",month:"short",year:"numeric"}) : "—"}
                                     </td>
                                     <td style={{ padding:"8px 12px",textAlign:"right",color:"#6B7280",fontWeight:600 }}>{Number(row.qty_received)||0}</td>
-                                    <td style={{ padding:"8px 12px",textAlign:"right",fontWeight:800,color:Number(row.qty_available)>0?"#15803D":"#9CA3AF" }}>{Number(row.qty_available)||0}</td>
+                                    <td style={{ padding:"8px 12px",textAlign:"right",fontWeight:800,color:calcAvail(row)>0?"#15803D":"#9CA3AF" }}>{calcAvail(row)}</td>
                                     <td style={{ padding:"8px 12px" }}>
                                       <div style={{ display:"flex",gap:5 }}>
                                         <button onClick={()=>openEdit(row)} title="Edit lot" style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"5px 8px",cursor:"pointer",color:"#15803D",display:"flex",alignItems:"center" }}><EditIcon /></button>
@@ -469,10 +483,7 @@ function StockTab({ data, onDelete, onUpdate, stockCodes, rawDefs }) {
             <Field label="PO #"><input style={inp} value={form.po_number} onChange={e=>setF("po_number",e.target.value)} placeholder="PO-2026-001" /></Field>
           </div>
           <Field label="Date Received"><input style={inp} type="date" value={form.received_at} onChange={e=>setF("received_at",e.target.value)} /></Field>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-            <Field label="Qty Received"><input style={inp} type="number" min="0" value={form.qty_received} onChange={e=>setF("qty_received",e.target.value)} /></Field>
-            <Field label="Qty Available"><input style={inp} type="number" min="0" value={form.qty_available} onChange={e=>setF("qty_available",e.target.value)} /></Field>
-          </div>
+          <Field label="Qty Received"><input style={inp} type="number" min="0" value={form.qty_received} onChange={e=>setF("qty_received",e.target.value)} /></Field>
           <SaveCancel onClose={closeEdit} onSave={saveEdit} />
         </Modal>
       )}
@@ -746,6 +757,8 @@ function ProductsTab({ data, setData, orders, stockCodes }) {
   };
   const deleteBatch = (pid,batchName) => setData(d=>d.map(p=>p.id===pid?{...p,batches:p.batches.filter(b=>b.batch!==batchName)}:p));
   const [editingBatch, setEditingBatch] = useState(null); // {pid, batch, qty}
+  const [expandedBatches, setExpandedBatches] = useState(new Set());
+  const toggleBatch = (key) => setExpandedBatches(prev => { const s=new Set(prev); s.has(key)?s.delete(key):s.add(key); return s; });
   const updateBatch = () => {
     if (!editingBatch) return;
     setData(d=>d.map(p=>p.id===editingBatch.pid?{...p,batches:p.batches.map(b=>b.batch===editingBatch.origBatch?{batch:editingBatch.batch,qty:Number(editingBatch.qty)||0}:b)}:p));
@@ -810,44 +823,76 @@ function ProductsTab({ data, setData, orders, stockCodes }) {
                       <tbody>
                         {product.batches.map((b,i)=>{
                           const isEditing = editingBatch?.pid===product.id && editingBatch?.origBatch===b.batch;
-                          const allocated = (orders||[]).filter(o=>o.status!=="Collected").reduce((sum,o)=>{
-                            return sum + o.items.filter(it=>it.productId===product.productId&&it.batch===b.batch).reduce((s,it)=>s+(Number(it.qty)||0),0);
-                          },0);
+                          const batchKey = `${product.id}-${b.batch}`;
+                          const isExpanded = expandedBatches.has(batchKey);
+                          const allocatedOrders = (orders||[]).filter(o=>o.status!=="Collected").map(o=>({
+                            ...o,
+                            batchQty: o.items.filter(it=>it.productId===product.productId&&it.batch===b.batch).reduce((s,it)=>s+(Number(it.qty)||0),0)
+                          })).filter(o=>o.batchQty>0);
+                          const allocated = allocatedOrders.reduce((s,o)=>s+o.batchQty,0);
                           const available = Math.max(0, b.qty - allocated);
+                          const isLast = i===product.batches.length-1;
                           return (
-                            <tr key={b.batch} style={{ borderBottom:i<product.batches.length-1?"1px solid #E5E7EB":"none",background:isEditing?"#FEF3C7":"transparent" }}>
-                              <td style={{ padding:"6px 10px" }}>
-                                {isEditing
-                                  ? <input autoFocus style={{...inp,fontFamily:"monospace",fontWeight:700,padding:"5px 8px",fontSize:13,width:160}} value={editingBatch.batch} onChange={e=>setEditingBatch(eb=>({...eb,batch:e.target.value}))} />
-                                  : <span style={{ fontFamily:"monospace",fontWeight:700,color:"#111827",background:"#F0FDF4",padding:"2px 8px",borderRadius:5 }}>{b.batch}</span>
-                                }
-                              </td>
-                              <td style={{ padding:"6px 10px",textAlign:"right" }}>
-                                {isEditing
-                                  ? <input style={{...inp,textAlign:"right",fontWeight:800,padding:"5px 8px",fontSize:14,width:80}} type="number" min="0" value={editingBatch.qty} onChange={e=>setEditingBatch(eb=>({...eb,qty:e.target.value}))} />
-                                  : <span style={{ fontWeight:800,fontSize:16,color:"#16A34A" }}>{b.qty}</span>
-                                }
-                              </td>
-                              <td style={{ padding:"6px 10px",textAlign:"right" }}>
-                                <span style={{ fontWeight:700,fontSize:14,color:allocated>0?"#D97706":"#D1D5DB" }}>{allocated>0?allocated:"—"}</span>
-                              </td>
-                              <td style={{ padding:"6px 10px",textAlign:"right" }}>
-                                <span style={{ fontWeight:700,fontSize:14,color:available<=0?"#DC2626":available<5?"#D97706":"#16A34A" }}>{available}</span>
-                              </td>
-                              <td style={{ padding:"6px 8px",textAlign:"right" }}>
-                                {isEditing ? (
-                                  <div style={{ display:"flex",gap:4,justifyContent:"flex-end" }}>
-                                    <button onClick={updateBatch} style={{ background:"#15803D",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
-                                    <button onClick={()=>setEditingBatch(null)} style={{ background:"none",border:"1px solid #E5E7EB",borderRadius:6,padding:"4px 8px",cursor:"pointer",color:"#9CA3AF",fontSize:11 }}>Cancel</button>
-                                  </div>
-                                ) : (
-                                  <div style={{ display:"flex",gap:4,justifyContent:"flex-end" }}>
-                                    <button onClick={()=>setEditingBatch({pid:product.id,origBatch:b.batch,batch:b.batch,qty:String(b.qty)})} style={{ background:"none",border:"none",cursor:"pointer",color:"#16A34A",opacity:0.7,display:"flex",padding:3 }} title="Edit batch"><EditIcon /></button>
-                                    <button onClick={()=>deleteBatch(product.id,b.batch)} style={{ background:"none",border:"none",cursor:"pointer",color:"#DC2626",opacity:0.5,display:"flex",padding:3 }} title="Delete batch"><TrashIcon /></button>
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
+                            <Fragment key={b.batch}>
+                              <tr style={{ borderBottom:(!isExpanded&&isLast)?"none":"1px solid #E5E7EB",background:isEditing?"#FEF3C7":"transparent" }}>
+                                <td style={{ padding:"6px 10px" }}>
+                                  {isEditing
+                                    ? <input autoFocus style={{...inp,fontFamily:"monospace",fontWeight:700,padding:"5px 8px",fontSize:13,width:160}} value={editingBatch.batch} onChange={e=>setEditingBatch(eb=>({...eb,batch:e.target.value}))} />
+                                    : (
+                                      <span onClick={()=>toggleBatch(batchKey)} style={{ fontFamily:"monospace",fontWeight:700,color:"#111827",background:"#F0FDF4",padding:"2px 8px",borderRadius:5,cursor:"pointer",userSelect:"none",display:"inline-flex",alignItems:"center",gap:5 }}>
+                                        {b.batch}
+                                        <span style={{ fontSize:9,color:"#9CA3AF" }}>{isExpanded?"▲":"▼"}</span>
+                                      </span>
+                                    )
+                                  }
+                                </td>
+                                <td style={{ padding:"6px 10px",textAlign:"right" }}>
+                                  {isEditing
+                                    ? <input style={{...inp,textAlign:"right",fontWeight:800,padding:"5px 8px",fontSize:14,width:80}} type="number" min="0" value={editingBatch.qty} onChange={e=>setEditingBatch(eb=>({...eb,qty:e.target.value}))} />
+                                    : <span style={{ fontWeight:800,fontSize:16,color:"#16A34A" }}>{b.qty}</span>
+                                  }
+                                </td>
+                                <td style={{ padding:"6px 10px",textAlign:"right" }}>
+                                  <span style={{ fontWeight:700,fontSize:14,color:allocated>0?"#D97706":"#D1D5DB" }}>{allocated>0?allocated:"—"}</span>
+                                </td>
+                                <td style={{ padding:"6px 10px",textAlign:"right" }}>
+                                  <span style={{ fontWeight:700,fontSize:14,color:available<=0?"#DC2626":available<5?"#D97706":"#16A34A" }}>{available}</span>
+                                </td>
+                                <td style={{ padding:"6px 8px",textAlign:"right" }}>
+                                  {isEditing ? (
+                                    <div style={{ display:"flex",gap:4,justifyContent:"flex-end" }}>
+                                      <button onClick={updateBatch} style={{ background:"#15803D",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
+                                      <button onClick={()=>setEditingBatch(null)} style={{ background:"none",border:"1px solid #E5E7EB",borderRadius:6,padding:"4px 8px",cursor:"pointer",color:"#9CA3AF",fontSize:11 }}>Cancel</button>
+                                    </div>
+                                  ) : (
+                                    <div style={{ display:"flex",gap:4,justifyContent:"flex-end" }}>
+                                      <button onClick={()=>setEditingBatch({pid:product.id,origBatch:b.batch,batch:b.batch,qty:String(b.qty)})} style={{ background:"none",border:"none",cursor:"pointer",color:"#16A34A",opacity:0.7,display:"flex",padding:3 }} title="Edit batch"><EditIcon /></button>
+                                      <button onClick={()=>deleteBatch(product.id,b.batch)} style={{ background:"none",border:"none",cursor:"pointer",color:"#DC2626",opacity:0.5,display:"flex",padding:3 }} title="Delete batch"><TrashIcon /></button>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                              {isExpanded && (
+                                <tr style={{ borderBottom:isLast?"none":"1px solid #E5E7EB" }}>
+                                  <td colSpan={5} style={{ padding:"0 10px 10px 28px",background:"#FAFAFA" }}>
+                                    {allocatedOrders.length===0 ? (
+                                      <div style={{ fontSize:12,color:"#9CA3AF",fontStyle:"italic",padding:"8px 0" }}>No orders allocated to this batch</div>
+                                    ) : (
+                                      <div style={{ display:"flex",flexDirection:"column",gap:5,paddingTop:6 }}>
+                                        {allocatedOrders.map(o=>(
+                                          <div key={o.id} style={{ display:"flex",alignItems:"center",gap:10,background:"#fff",border:"1px solid #E5E7EB",borderRadius:7,padding:"7px 12px",flexWrap:"wrap" }}>
+                                            <span style={{ fontFamily:"monospace",fontSize:12,fontWeight:700,color:"#374151" }}>{o.invoiceNumber||"—"}</span>
+                                            <span style={{ fontSize:13,color:"#111827",fontWeight:600,flex:1 }}>{o.customer}</span>
+                                            <span style={{ fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:700,background:o.status==="Open"?"#EFF6FF":o.status==="Stock Allocated"?"#FEF3C7":o.status==="Collected"?"#F0FDF4":"#F9FAFB",color:o.status==="Open"?"#1D4ED8":o.status==="Stock Allocated"?"#D97706":o.status==="Collected"?"#16A34A":"#6B7280" }}>{o.status}</span>
+                                            <span style={{ fontSize:13,fontWeight:800,color:"#D97706",marginLeft:"auto" }}>{o.batchQty} units</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </td>
+                                </tr>
+                              )}
+                            </Fragment>
                           );
                         })}
                       </tbody>
@@ -866,155 +911,190 @@ function ProductsTab({ data, setData, orders, stockCodes }) {
   );
 }
 
-function ProductionForm({ initial, incomingStock, products, recipes, onSave, onClose }) {
-  const emptyLine = () => ({ stockId: "", itemId: "", qty: "" });
-  const [stockLines, setStockLines] = useState(
-    initial?.stockLines?.length ? initial.stockLines.map(l=>({stockId:String(l.stockId),itemId:String(l.itemId),qty:String(l.qty)})) : [emptyLine()]
-  );
+function ProductionForm({ initial, incomingStock, products, recipes, rawDefs, onSave, onClose }) {
   const [productId, setProductId] = useState(initial?.productId || "");
   const [batch, setBatch] = useState(initial?.batch || "");
   const [qty, setQty] = useState(initial?.qty ? String(initial.qty) : "");
+  const [stockLines, setStockLines] = useState(
+    initial?.stockLines?.length
+      ? initial.stockLines.map(l=>({stockId:String(l.stockId),itemId:String(l.itemId),qty:String(l.qty)}))
+      : []
+  );
 
-  const setLine = (i, k, v) => setStockLines(ls => ls.map((l,idx)=>idx===i?{...l,[k]:v}:l));
-  const addLine = () => setStockLines(ls=>[...ls, emptyLine()]);
-  const removeLine = (i) => setStockLines(ls=>ls.filter((_,idx)=>idx!==i));
-
-  // Build stock lines from recipe — always populate items, compute qty if qty is known
-  const buildRecipeLines = (pid, qtyVal) => {
+  const getRecipe = (pid) => {
     const raw = recipes?.[pid] || [];
-    const recipe = Array.isArray(raw) ? raw : (raw.lines || []);
-    if (!recipe.length) return null;
+    return Array.isArray(raw) ? raw : (raw.lines || []);
+  };
+  const recipe = getRecipe(productId);
+
+  const buildLines = (pid, qtyVal, keepLots) => {
+    const r = getRecipe(pid);
     const q = Number(qtyVal) || 0;
-    return recipe.map(r => ({
-      stockId: String(r.stockId),
-      itemId: String(r.itemId),
-      qty: q > 0 ? String(Math.round(q * r.pct / 100)) : "",
-    }));
+    return r.map((item, i) => {
+      const existing = keepLots ? (stockLines[i] || {}) : {};
+      let stockId = existing.stockId || "";
+      let itemId = existing.itemId || "";
+      if (!stockId) {
+        for (const s of incomingStock) {
+          const it = (s.items||[]).find(it => it.code === item.rawId);
+          if (it) { stockId = String(s.id); itemId = String(it.id); break; }
+        }
+      }
+      return { stockId, itemId, qty: q > 0 ? String(Math.round((item.amount||item.pct||0) * q)) : "" };
+    });
   };
 
-  const applyRecipe = (pid, qtyVal) => {
-    if (initial) return;
-    const lines = buildRecipeLines(pid, qtyVal);
-    if (lines) setStockLines(lines);
-  };
-
-  // On mount: if no existing run and a product has a recipe, pre-fill stock lines
   const [recipeApplied, setRecipeApplied] = useState(false);
-  if (!initial && !recipeApplied && productId) {
-    const lines = buildRecipeLines(productId, qty);
-    if (lines) { setStockLines(lines); setRecipeApplied(true); }
+  if (!initial && !recipeApplied && productId && recipe.length) {
+    setStockLines(buildLines(productId, qty, false));
+    setRecipeApplied(true);
   }
 
+  const setLine = (i, k, v) => setStockLines(ls => ls.map((l,idx)=>idx===i?{...l,[k]:v}:l));
   const selectedProduct = products.find(p=>p.productId===productId);
   const validLines = stockLines.filter(l=>l.stockId && l.itemId && Number(l.qty)>0);
-  const valid = validLines.length>0 && productId && batch && Number(qty)>0;
-
-  // Flat list of all items across all POs for the dropdown
-  const allStockItems = incomingStock.flatMap(s =>
-    (s.items||[]).map(it => ({
-      stockId: s.id,
-      itemId: it.id,
-      label: `${it.code} · ${it.description}`,
-      po: s.po,
-      supplier: s.supplier,
-      available: Math.max(0, (Number(it.receivedQty)||0) - (Number(it.usedQty)||0)),
-    }))
-  );
+  const valid = productId && batch && Number(qty)>0;
 
   return (
     <div>
-      {/* Output Product */}
-      <div style={{ background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:8,padding:16,marginBottom:20 }}>
-        <div style={{ fontSize:11,fontWeight:700,color:"#D97706",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:12 }}>① Output Product & Batch</div>
-        <Field label="Select Product">
-          <select style={sel} value={productId} onChange={e=>{ setProductId(e.target.value); applyRecipe(e.target.value, qty); }}>
-            <option value="">— Choose a product —</option>
-            {products.map(p=><option key={p.productId} value={p.productId}>{p.productId} · {p.description}</option>)}
-          </select>
-        </Field>
-        <Field label="Batch — type a new batch or pick an existing one">
-          <input style={inp} value={batch} onChange={e=>setBatch(e.target.value)} placeholder="e.g. B2026-04A" list="batch-opts" />
-          {selectedProduct && <datalist id="batch-opts">{selectedProduct.batches.map(b=><option key={b.batch} value={b.batch}/>)}</datalist>}
-          {selectedProduct?.batches.length>0 && (
-            <div style={{ marginTop:8,display:"flex",gap:6,flexWrap:"wrap" }}>
-              <span style={{ fontSize:11,color:"#9CA3AF",alignSelf:"center" }}>Existing:</span>
-              {selectedProduct.batches.map(b=>(
-                <button key={b.batch} onClick={()=>setBatch(b.batch)} style={{ fontSize:11,padding:"3px 10px",borderRadius:6,border:"1px solid #E5E7EB",background:batch===b.batch?"#D97706":"#F9FAFB",color:batch===b.batch?"#fff":"#6B7280",cursor:"pointer",fontFamily:"monospace",fontWeight:700 }}>
-                  {b.batch} <span style={{ opacity:0.7,fontWeight:400 }}>({b.qty})</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </Field>
-        <Field label="Qty Produced"><input style={inp} type="number" min="1" value={qty} onChange={e=>{ setQty(e.target.value); applyRecipe(productId, e.target.value); }} placeholder="0" /></Field>
+      {/* ── Output product strip ── */}
+      <div style={{ background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:10,padding:"16px 20px",marginBottom:20 }}>
+        <div style={{ fontSize:10,fontWeight:700,color:"#D97706",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14 }}>① Output Product & Batch</div>
+        <div style={{ display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:16,alignItems:"start" }}>
+          <Field label="Product">
+            <select style={sel} value={productId} onChange={e=>{
+              const p = e.target.value;
+              setProductId(p);
+              setRecipeApplied(false);
+              setStockLines(buildLines(p, qty, false));
+            }}>
+              <option value="">— Choose a product —</option>
+              {products.map(p=><option key={p.productId} value={p.productId}>{p.productId} · {p.description}</option>)}
+            </select>
+          </Field>
+          <Field label="Batch Number">
+            <input style={inp} value={batch} onChange={e=>setBatch(e.target.value)} placeholder="e.g. B2026-04A" list="batch-opts" />
+            {selectedProduct && <datalist id="batch-opts">{selectedProduct.batches.map(b=><option key={b.batch} value={b.batch}/>)}</datalist>}
+          </Field>
+          <Field label="Qty Produced">
+            <input style={inp} type="number" min="1" value={qty} onChange={e=>{
+              setQty(e.target.value);
+              setStockLines(buildLines(productId, e.target.value, true));
+            }} placeholder="0" />
+          </Field>
+        </div>
+        {selectedProduct?.batches.length>0 && (
+          <div style={{ marginTop:10,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center" }}>
+            <span style={{ fontSize:11,color:"#9A8A74" }}>Existing batches:</span>
+            {selectedProduct.batches.map(b=>(
+              <button key={b.batch} onClick={()=>setBatch(b.batch)} style={{ fontSize:11,padding:"3px 10px",borderRadius:6,border:"1px solid #E5E7EB",background:batch===b.batch?"#D97706":"#F9FAFB",color:batch===b.batch?"#fff":"#6B7280",cursor:"pointer",fontFamily:"monospace",fontWeight:700 }}>
+                {b.batch} <span style={{ opacity:0.7,fontWeight:400 }}>({b.qty})</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Arrow */}
-      <div style={{ display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20,gap:8 }}>
+      {/* ── Made From divider ── */}
+      <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
         <div style={{ flex:1,height:2,background:"linear-gradient(to right,#E5E7EB,#16A34A)",borderRadius:2 }}/>
-        <span style={{ fontSize:11,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.1em",whiteSpace:"nowrap" }}>made from</span>
+        <span style={{ fontSize:11,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.12em",whiteSpace:"nowrap" }}>made from</span>
         <ArrowIcon />
         <div style={{ flex:1,height:2,background:"linear-gradient(to right,#16A34A,#E5E7EB)",borderRadius:2 }}/>
       </div>
 
-      {/* Stock Inputs */}
-      <div style={{ background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:8,padding:16,marginBottom:20 }}>
-        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12 }}>
-          <div style={{ fontSize:11,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.07em" }}>② Incoming Stock Used</div>
-          <button onClick={addLine} style={{ display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:700,color:"#16A34A",background:"#fff",border:"1px solid #86EFAC",borderRadius:7,padding:"4px 10px",cursor:"pointer" }}>
-            <PlusIcon /> Add Stock Line
-          </button>
-        </div>
-        <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
-          {stockLines.map((line, i) => {
-            const selected = allStockItems.find(it=>it.stockId===Number(line.stockId)&&it.itemId===Number(line.itemId));
-            const stockItem = incomingStock.find(s=>s.id===Number(line.stockId));
-            return (
-              <div key={i} style={{ background:"#fff",borderRadius:8,padding:"10px 12px",border:"1px solid #E5E7EB" }}>
-                <div style={{ display:"grid",gridTemplateColumns:"1fr auto",gap:8,alignItems:"start" }}>
-                  <div>
-                    <label style={lbl}>Stock Item</label>
-                    <select style={sel} value={line.stockId&&line.itemId?`${line.stockId}:${line.itemId}`:""} onChange={e=>{
-                      const [sid,iid] = e.target.value.split(":");
-                      setLine(i,"stockId",sid);
-                      setLine(i,"itemId",iid);
-                    }}>
-                      <option value="">— Choose a stock item —</option>
-                      {incomingStock.map(s=>(
-                        <optgroup key={s.id} label={`${s.supplier} · ${s.po}`}>
-                          {(s.items||[]).map(it=>{
-                            const avail = Math.max(0,(Number(it.receivedQty)||0)-(Number(it.usedQty)||0));
-                            return <option key={it.id} value={`${s.id}:${it.id}`}>{it.code} · {it.description} (avail: {avail})</option>;
-                          })}
-                        </optgroup>
-                      ))}
-                    </select>
+      {/* ── Raw materials section ── */}
+      <div style={{ background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:10,padding:"16px 20px",marginBottom:20 }}>
+        <div style={{ fontSize:10,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14 }}>② Raw Materials Used</div>
+
+        {!productId && (
+          <div style={{ textAlign:"center",padding:"28px 0",color:"#9CA3AF",fontSize:13 }}>Select a product above to see recipe ingredients</div>
+        )}
+        {productId && recipe.length===0 && (
+          <div style={{ textAlign:"center",padding:"28px 0",color:"#9CA3AF",fontSize:13 }}>No recipe defined for this product — add one in Settings → Recipes</div>
+        )}
+
+        {recipe.length>0 && (
+          <>
+            {/* Column headers */}
+            <div style={{ display:"grid",gridTemplateColumns:"200px 1fr 140px",gap:14,paddingBottom:8,borderBottom:"2px solid #BBF7D0",marginBottom:10 }}>
+              <div style={{ fontSize:10,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.07em" }}>Recipe Ingredient</div>
+              <div style={{ fontSize:10,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.07em" }}>Stock Lot</div>
+              <div style={{ fontSize:10,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.07em",textAlign:"right" }}>Qty Used</div>
+            </div>
+
+            {recipe.map((recipeItem, i) => {
+              const rd = (rawDefs||[]).find(r=>r.raw_id===recipeItem.rawId);
+              const line = stockLines[i] || { stockId:"", itemId:"", qty:"" };
+              const matchingLots = incomingStock.flatMap(s=>
+                (s.items||[])
+                  .filter(it=>it.code===recipeItem.rawId)
+                  .map(it=>({
+                    key:`${s.id}:${it.id}`,
+                    stockId:s.id, itemId:it.id,
+                    supplier:s.supplier, po:s.po,
+                    batch:it.batch||"", usedBy:it.usedBy||"",
+                    available:Math.max(0,(Number(it.receivedQty)||0)-(Number(it.usedQty)||0)),
+                  }))
+              );
+              const selectedLot = matchingLots.find(x=>String(x.stockId)===String(line.stockId)&&String(x.itemId)===String(line.itemId));
+
+              return (
+                <div key={i} style={{ display:"grid",gridTemplateColumns:"200px 1fr 140px",gap:14,alignItems:"start",background:"#fff",borderRadius:8,padding:"14px 16px",border:"1px solid #D1FAE5",marginBottom:8 }}>
+
+                  {/* Recipe ingredient info */}
+                  <div style={{ display:"flex",flexDirection:"column",gap:4 }}>
+                    <span style={{ fontFamily:"monospace",fontSize:12,fontWeight:700,color:"#D97706",background:"#FEF3C7",display:"inline-block",padding:"2px 8px",borderRadius:5,width:"fit-content" }}>{recipeItem.rawId}</span>
+                    <span style={{ fontSize:13,fontWeight:600,color:"#111827" }}>{rd?.description||""}</span>
+                    {recipeItem.amount ? (
+                      <span style={{ fontSize:11,color:"#9A8A74" }}>Amt per unit: <strong style={{color:"#374151"}}>{recipeItem.amount}</strong></span>
+                    ) : null}
                   </div>
-                  <div style={{ display:"flex",gap:8,alignItems:"end" }}>
-                    <div style={{ width:110 }}>
-                      <label style={lbl}>Qty Used</label>
-                      <input style={inp} type="number" min="1" value={line.qty} onChange={e=>setLine(i,"qty",e.target.value)} placeholder="0" />
-                    </div>
-                    {stockLines.length>1 && (
-                      <button onClick={()=>removeLine(i)} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"10px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center",height:42,marginBottom:0 }}><TrashIcon /></button>
+
+                  {/* Stock lot selector */}
+                  <div>
+                    {matchingLots.length===0 ? (
+                      <div style={{ fontSize:12,color:"#DC2626",padding:"8px 0",fontStyle:"italic" }}>No received stock found for this raw</div>
+                    ) : (
+                      <>
+                        <select style={sel} value={line.stockId&&line.itemId?`${line.stockId}:${line.itemId}`:""} onChange={e=>{
+                          const [sid,iid]=e.target.value.split(":");
+                          setLine(i,"stockId",sid||"");
+                          setLine(i,"itemId",iid||"");
+                        }}>
+                          <option value="">— Select lot —</option>
+                          {matchingLots.map(x=>(
+                            <option key={x.key} value={x.key}>
+                              {x.po}{x.batch?` · ${x.batch}`:""} — avail: {x.available}
+                            </option>
+                          ))}
+                        </select>
+                        {selectedLot && (
+                          <div style={{ display:"flex",gap:8,marginTop:6,flexWrap:"wrap",alignItems:"center" }}>
+                            <span style={{ fontSize:11,color:"#6B7280" }}>{selectedLot.supplier}</span>
+                            <span style={{ fontSize:11,fontFamily:"monospace",background:"#FEF3C7",color:"#D97706",padding:"1px 6px",borderRadius:4 }}>{selectedLot.po}</span>
+                            {selectedLot.batch && <span style={{ fontSize:11,fontFamily:"monospace",background:"#EFF6FF",color:"#1D4ED8",padding:"1px 6px",borderRadius:4 }}>{selectedLot.batch}</span>}
+                            {selectedLot.usedBy && <span style={{ fontSize:11,color:"#6B7280" }}>BB: {selectedLot.usedBy}</span>}
+                            <span style={{ fontSize:11,fontWeight:700,color:selectedLot.available>0?"#16A34A":"#DC2626" }}>Avail: {selectedLot.available}</span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
-                </div>
-                {selected && (
-                  <div style={{ display:"flex",gap:12,marginTop:8,flexWrap:"wrap",alignItems:"center" }}>
-                    <span style={{ fontSize:11,color:"#9CA3AF" }}>Supplier: <strong style={{color:"#111827"}}>{selected.supplier}</strong></span>
-                    <span style={{ fontFamily:"monospace",fontSize:11,background:"#FEF3C7",color:"#D97706",padding:"1px 6px",borderRadius:4 }}>{selected.po}</span>
-                    <span style={{ fontSize:11,color:"#9CA3AF" }}>Available: <strong style={{color:selected.available>0?"#D97706":"#DC2626"}}>{selected.available}</strong></span>
+
+                  {/* Qty used */}
+                  <div>
+                    <input style={{...inp,textAlign:"right"}} type="number" min="0" value={line.qty} onChange={e=>setLine(i,"qty",e.target.value)} placeholder="0" />
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
 
       <SaveCancel onClose={onClose} onSave={()=>valid&&onSave({ stockLines:validLines.map(l=>({stockId:Number(l.stockId),itemId:Number(l.itemId),qty:Number(l.qty)})), productId, batch, qty:Number(qty) })} saveLabel={initial?"Save Changes":"Create Production Run"} />
-      {!valid && <p style={{ textAlign:"center",fontSize:12,color:"#9CA3AF",marginTop:8 }}>Add at least one stock line and fill all product fields</p>}
+      {!valid && <p style={{ textAlign:"center",fontSize:12,color:"#9CA3AF",marginTop:8 }}>Select a product, batch and quantity to continue</p>}
     </div>
   );
 }
@@ -1114,13 +1194,15 @@ function PrintModal({ row, incomingStock, onClose }) {
   );
 }
 
-function ProductionTab({ data, setData, incomingStock, setIncomingStock, products, setProducts, recipes }) {
+function ProductionTab({ data, setData, incomingStock, setIncomingStock, products, setProducts, recipes, rawDefs }) {
   const [modal, setModal] = useState(false);
   const [edit, setEdit] = useState(null);
   const [toast, setToast] = useState(null);
   const [printRecord, setPrintRecord] = useState(null);
   const close = () => { setModal(false); setEdit(null); };
   const showToast = (msg,color) => { setToast({msg,color}); setTimeout(()=>setToast(null),2500); };
+  const [expandedRuns, setExpandedRuns] = useState(new Set());
+  const toggleRun = (id) => setExpandedRuns(prev => { const s=new Set(prev); s.has(id)?s.delete(id):s.add(id); return s; });
 
   const handlePrint = (row) => { setPrintRecord(row); };
 
@@ -1212,71 +1294,91 @@ function ProductionTab({ data, setData, incomingStock, setIncomingStock, product
       )}
       {data.length===0 ? (
         <div style={{ textAlign:"center",padding:"60px 0",color:"#9CA3AF" }}><div style={{ fontSize:40,marginBottom:12 }}>⚙️</div><p>No production runs yet</p></div>
-      ) : (
-        <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
-          {data.map((row)=>(
-            <div key={row.id} style={{ background:"#fff",border:"1px solid #E5E7EB",borderRadius:8,overflow:"hidden" }}>
-              {/* Header */}
-              <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,background:"#F9FAFB",borderBottom:"1px solid #E5E7EB",flexWrap:"wrap" }}>
-                <div style={{ flex:1,minWidth:180 }}>
-                  <div style={{ fontSize:10,fontWeight:700,color:"#D97706",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4 }}>Output Product</div>
-                  <div style={{ fontWeight:700,color:"#111827",fontSize:16 }}>{row.description}</div>
-                  <div style={{ display:"flex",gap:6,marginTop:5,alignItems:"center",flexWrap:"wrap" }}>
-                    <span style={{ fontFamily:"monospace",fontSize:12,background:"#F3F4F6",color:"#374151",padding:"2px 7px",borderRadius:5,fontWeight:700 }}>{row.productId}</span>
-                    <span style={{ fontFamily:"monospace",fontSize:12,background:"#F0FDF4",color:"#16A34A",padding:"2px 7px",borderRadius:5,fontWeight:700 }}>{row.batch}</span>
+      ) : (()=>{
+        // Group runs by productId, preserving first-seen order
+        const productOrder = [];
+        const productGroups = {};
+        data.forEach(row=>{
+          if (!productGroups[row.productId]) {
+            productOrder.push(row.productId);
+            productGroups[row.productId] = { productId:row.productId, description:row.description, runs:[] };
+          }
+          productGroups[row.productId].runs.push(row);
+        });
+        return (
+          <div style={{ display:"flex",flexDirection:"column",gap:16 }}>
+            {productOrder.map(pid=>{
+              const group = productGroups[pid];
+              const groupTotal = group.runs.reduce((s,r)=>s+Number(r.qty||0),0);
+              return (
+                <div key={pid} style={{ border:"1px solid #D1FAE5",borderRadius:10,overflow:"hidden" }}>
+                  {/* Product group header */}
+                  <div style={{ background:"#F0FDF4",borderBottom:"2px solid #86EFAC",padding:"12px 20px",display:"flex",alignItems:"center",gap:12 }}>
+                    <span style={{ fontFamily:"monospace",fontSize:12,fontWeight:700,background:"#D1FAE5",color:"#15803D",padding:"3px 10px",borderRadius:6 }}>{pid}</span>
+                    <span style={{ fontWeight:800,fontSize:16,color:"#111827",flex:1 }}>{group.description}</span>
+                    <span style={{ fontSize:12,color:"#16A34A",fontWeight:700 }}>{group.runs.length} run{group.runs.length!==1?"s":""}</span>
+                    <span style={{ fontSize:12,color:"#9CA3AF" }}>·</span>
+                    <span style={{ fontSize:13,fontWeight:800,color:"#16A34A" }}>{groupTotal} units total</span>
                   </div>
-                </div>
-                <div style={{ textAlign:"center",padding:"0 8px" }}>
-                  <div style={{ fontSize:10,fontWeight:700,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.07em" }}>Produced</div>
-                  <div style={{ fontSize:30,fontWeight:800,color:"#16A34A",lineHeight:1 }}>{row.qty}</div>
-                  <div style={{ fontSize:11,color:"#9CA3AF" }}>units</div>
-                </div>
-                <div style={{ display:"flex",gap:6,marginLeft:"auto" }}>
-                  <button onClick={()=>handlePrint(row)} title="Print production record" style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:"#F3F4F6",border:"none",borderRadius:7,cursor:"pointer",color:"#374151",fontSize:12,fontWeight:700 }}><PrintIcon /> Print</button>
-                  <button onClick={()=>{setEdit(row);setModal(true);}} style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#16A34A",display:"flex",alignItems:"center" }}><EditIcon /></button>
-                  <button onClick={()=>handleDelete(row, setIncomingStock)} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
-                </div>
-              </div>
 
-              {/* Stock lines */}
-              <div style={{ padding:"12px 20px" }}>
-                <div style={{ fontSize:10,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:8 }}>
-                  From {row.stockLines?.length || 0} Stock Item{row.stockLines?.length!==1?"s":""}
-                </div>
-                <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
-                  {(row.stockLines||[]).map((line,i) => {
-                    const s = incomingStock.find(st=>st.id===line.stockId);
-                    const it = s?.items?.find(it=>it.id===line.itemId);
-                    return (
-                      <div key={i} style={{ display:"flex",alignItems:"center",gap:10,background:"#F0FDF4",borderRadius:8,padding:"8px 12px",flexWrap:"wrap" }}>
-                        <div style={{ flex:1,minWidth:140 }}>
-                          <div style={{ fontWeight:700,color:"#111827",fontSize:13 }}>{it?.description || "Unknown item"}</div>
-                          <div style={{ display:"flex",gap:6,marginTop:3,flexWrap:"wrap",alignItems:"center" }}>
-                            <span style={{ fontFamily:"monospace",fontSize:11,background:"#F3F4F6",color:"#374151",padding:"1px 6px",borderRadius:4,fontWeight:700 }}>{it?.code}</span>
-                            <span style={{ fontFamily:"monospace",fontSize:11,background:"#FEF3C7",color:"#D97706",padding:"1px 6px",borderRadius:4 }}>{s?.po}</span>
-                            <span style={{ fontSize:11,color:"#9CA3AF" }}>{s?.supplier}</span>
+                  {/* Runs within this product group */}
+                  <div style={{ background:"#fff" }}>
+                    {group.runs.map((row, ri)=>(
+                      <div key={row.id} style={{ borderBottom:ri<group.runs.length-1?"1px solid #E5E7EB":"none", padding:"14px 20px" }}>
+                        {/* Batch row */}
+                        <div style={{ display:"flex",alignItems:"center",gap:12,flexWrap:"wrap" }}>
+                          {/* Batch — leading field, clickable to expand */}
+                          <div style={{ display:"flex",alignItems:"center",gap:8,flex:1,minWidth:200,cursor:"pointer" }} onClick={()=>toggleRun(row.id)}>
+                            <span style={{ fontFamily:"monospace",fontSize:14,fontWeight:800,background:"#ECFDF5",color:"#065F46",padding:"4px 12px",borderRadius:7,border:"1px solid #A7F3D0",userSelect:"none" }}>{row.batch}</span>
+                            <div style={{ fontSize:22,fontWeight:800,color:"#16A34A",lineHeight:1 }}>{row.qty}</div>
+                            <div style={{ fontSize:11,color:"#9CA3AF",alignSelf:"flex-end",paddingBottom:2 }}>units</div>
+                            <span style={{ fontSize:11,color:"#9CA3AF",marginLeft:4 }}>{expandedRuns.has(row.id)?"▲":"▼"}</span>
+                          </div>
+                          {/* Actions */}
+                          <div style={{ display:"flex",gap:6,marginLeft:"auto" }}>
+                            <button onClick={()=>handlePrint(row)} title="Print" style={{ display:"flex",alignItems:"center",gap:5,padding:"5px 11px",background:"#F3F4F6",border:"none",borderRadius:7,cursor:"pointer",color:"#374151",fontSize:12,fontWeight:700 }}><PrintIcon /> Print</button>
+                            <button onClick={()=>{setEdit(row);setModal(true);}} style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"5px 9px",cursor:"pointer",color:"#16A34A",display:"flex",alignItems:"center" }}><EditIcon /></button>
+                            <button onClick={()=>handleDelete(row, setIncomingStock)} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"5px 9px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
                           </div>
                         </div>
-                        <div style={{ textAlign:"right" }}>
-                          <div style={{ fontSize:10,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Qty Used</div>
-                          <div style={{ fontSize:18,fontWeight:800,color:"#16A34A" }}>{line.qty}</div>
-                        </div>
+
+                        {/* Stock lines — hidden by default, shown on expand */}
+                        {expandedRuns.has(row.id) && (row.stockLines||[]).length>0 && (
+                          <div style={{ marginTop:10,display:"flex",flexDirection:"column",gap:5 }}>
+                            {(row.stockLines||[]).map((line,i)=>{
+                              const s = incomingStock.find(st=>st.id===line.stockId);
+                              const it = s?.items?.find(it=>it.id===line.itemId);
+                              return (
+                                <div key={i} style={{ display:"flex",alignItems:"center",gap:10,background:"#F9FAFB",borderRadius:7,padding:"7px 12px",flexWrap:"wrap" }}>
+                                  <div style={{ flex:1,minWidth:120 }}>
+                                    <span style={{ fontFamily:"monospace",fontSize:11,fontWeight:700,background:"#F3F4F6",color:"#374151",padding:"1px 6px",borderRadius:4,marginRight:6 }}>{it?.code||"—"}</span>
+                                    <span style={{ fontSize:12,color:"#374151",fontWeight:600 }}>{it?.description||"Unknown"}</span>
+                                  </div>
+                                  <span style={{ fontFamily:"monospace",fontSize:11,background:"#FEF3C7",color:"#D97706",padding:"1px 6px",borderRadius:4 }}>{s?.po||"—"}</span>
+                                  <span style={{ fontSize:11,color:"#9CA3AF" }}>{s?.supplier||""}</span>
+                                  <span style={{ fontSize:12,fontWeight:800,color:"#16A34A",marginLeft:"auto" }}>{line.qty} used</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        );
+      })()}
       {modal && (
-        <Modal title={edit?"Edit Production Run":"New Production Run"} onClose={close}>
+        <Modal title={edit?"Edit Production Run":"New Production Run"} onClose={close} maxWidth={940}>
           <ProductionForm
             initial={edit}
             incomingStock={incomingStock}
             products={products}
             recipes={recipes}
+            rawDefs={rawDefs}
             onSave={(form)=>save(form, setIncomingStock)}
             onClose={close}
           />
@@ -1646,7 +1748,7 @@ function StockCodesTab({ data, setData }) {
 
 function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes, setStockCodes, rawDefs, setRawDefs }) {
   const [settingsTab, setSettingsTab] = useState("Recipes");
-  const emptyLine = () => ({ stockId:"", itemId:"", pct:"" });
+  const emptyLine = () => ({ rawId:"", amount:"" });
   const [editingId, setEditingId] = useState(null);
   const [lines, setLines] = useState([emptyLine()]);
   const [weight, setWeight] = useState("");
@@ -1657,7 +1759,7 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
   const startEdit = (productId) => {
     const existing = recipes[productId] || {};
     const existingLines = existing.lines || (Array.isArray(existing) ? existing : []);
-    setLines(existingLines.length ? existingLines.map(l=>({...l,pct:String(l.pct)})) : [emptyLine()]);
+    setLines(existingLines.length ? existingLines.map(l=>({rawId:l.rawId||"",amount:String(l.amount??l.pct??"")})) : [emptyLine()]);
     setWeight(existing.weight!=null ? String(existing.weight) : "");
     setWeightUnit(existing.weightUnit || "g");
     setEditingId(productId);
@@ -1667,14 +1769,14 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
   const closeNewRecipe = () => { setNewRecipeModal(false); setNewRecipeProductId(""); setLines([emptyLine()]); setWeight(""); setWeightUnit("g"); };
   const saveNewRecipe = () => {
     if (!newRecipeProductId) return;
-    const valid = lines.filter(l=>l.stockId&&l.itemId&&Number(l.pct)>0);
-    setRecipes(r=>({...r,[newRecipeProductId]:{ lines: valid.map(l=>({stockId:Number(l.stockId),itemId:Number(l.itemId),pct:Number(l.pct)})), weight: weight!==""?Number(weight):null, weightUnit }}));
+    const valid = lines.filter(l=>l.rawId&&Number(l.amount)>0);
+    setRecipes(r=>({...r,[newRecipeProductId]:{ lines: valid.map(l=>({rawId:l.rawId,amount:Number(l.amount)})), weight: weight!==""?Number(weight):null, weightUnit }}));
     closeNewRecipe();
   };
   const saveRecipe = (productId) => {
-    const valid = lines.filter(l=>l.stockId&&l.itemId&&Number(l.pct)>0);
+    const valid = lines.filter(l=>l.rawId&&Number(l.amount)>0);
     setRecipes(r=>({...r,[productId]:{
-      lines: valid.map(l=>({stockId:Number(l.stockId),itemId:Number(l.itemId),pct:Number(l.pct)})),
+      lines: valid.map(l=>({rawId:l.rawId,amount:Number(l.amount)})),
       weight: weight!==""?Number(weight):null,
       weightUnit,
     }}));
@@ -1684,9 +1786,6 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
   const addLine = () => setLines(ls=>[...ls,emptyLine()]);
   const removeLine = (i) => setLines(ls=>ls.filter((_,idx)=>idx!==i));
 
-  const allItems = incomingStock.flatMap(s=>(s.items||[]).map(it=>({
-    stockId:s.id, itemId:it.id, code:it.code, description:it.description, supplier:s.supplier, po:s.po,
-  })));
 
   return (
     <div>
@@ -1727,16 +1826,12 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
             </div>
             <label style={lbl}>Ingredients</label>
             {lines.map((line,i)=>(
-              <div key={i} style={{ display:"grid",gridTemplateColumns:"1fr 1fr 70px 32px",gap:6,marginBottom:6 }}>
-                <select style={{...sel,fontSize:12}} value={line.stockId} onChange={e=>setLine(i,"stockId",e.target.value)}>
-                  <option value="">PO</option>
-                  {incomingStock.map(s=><option key={s.id} value={s.id}>{s.po||s.supplier}</option>)}
+              <div key={i} style={{ display:"grid",gridTemplateColumns:"1fr 70px 32px",gap:6,marginBottom:6 }}>
+                <select style={{...sel,fontSize:12}} value={line.rawId} onChange={e=>setLine(i,"rawId",e.target.value)}>
+                  <option value="">— Choose raw —</option>
+                  {rawDefs.filter(r=>r.available!==false).map(r=><option key={r.id} value={r.raw_id}>{r.raw_id} — {r.description}</option>)}
                 </select>
-                <select style={{...sel,fontSize:12}} value={line.itemId} onChange={e=>setLine(i,"itemId",e.target.value)}>
-                  <option value="">Item</option>
-                  {(incomingStock.find(s=>String(s.id)===String(line.stockId))?.items||[]).map(it=><option key={it.id} value={it.id}>{it.code} — {it.description}</option>)}
-                </select>
-                <input style={{...inp,fontSize:12,textAlign:"right"}} type="number" min="0" max="100" value={line.pct} onChange={e=>setLine(i,"pct",e.target.value)} placeholder="%" />
+                <input style={{...inp,fontSize:12,textAlign:"right"}} type="number" min="0" value={line.amount} onChange={e=>setLine(i,"amount",e.target.value)} placeholder="Amt" />
                 <button onClick={()=>removeLine(i)} style={{ background:"#FEF2F2",border:"none",borderRadius:6,cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center",justifyContent:"center" }}><TrashIcon /></button>
               </div>
             ))}
@@ -1756,7 +1851,7 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
             const recipeWeight = Array.isArray(recipeData) ? null : recipeData.weight;
             const recipeWeightUnit = Array.isArray(recipeData) ? "g" : (recipeData.weightUnit || "g");
             const isEditing = editingId===product.productId;
-            const totalPct = lines.reduce((s,l)=>s+(Number(l.pct)||0),0);
+            const totalAmount = lines.reduce((s,l)=>s+(Number(l.amount)||0),0);
             return (
               <div key={product.productId} style={{ background:"#fff",border:`1px solid ${recipe.length>0?"#86EFAC":"#E5E7EB"}`,borderRadius:8,overflow:"hidden" }}>
                 {/* Header */}
@@ -1781,21 +1876,20 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
                     <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
                       <thead>
                         <tr style={{ borderBottom:"1px solid #E5E7EB" }}>
-                          {["Item Code","Description","Unit Cost","% of Qty"].map((h,i)=>(
+                          {["Item Code","Description","Unit Cost","Amount"].map((h,i)=>(
                             <th key={h} style={{ padding:"6px 10px",textAlign:i>=2?"right":"left",fontSize:10,fontWeight:700,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.06em" }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {recipe.map((line,i)=>{
-                          const s=incomingStock.find(st=>st.id===Number(line.stockId));
-                          const it=s?.items?.find(it=>it.id===Number(line.itemId));
+                          const rd=(rawDefs||[]).find(r=>r.raw_id===line.rawId);
                           return (
                             <tr key={i} style={{ borderBottom:i<recipe.length-1?"1px solid #E5E7EB":"none" }}>
-                              <td style={{ padding:"8px 10px" }}><span style={{ fontFamily:"monospace",fontSize:11,color:"#374151",fontWeight:700,background:"#F3F4F6",padding:"1px 6px",borderRadius:4 }}>{it?.code||"—"}</span></td>
-                              <td style={{ padding:"8px 10px",fontWeight:600,color:"#111827" }}>{it?.description||"—"}</td>
-                              <td style={{ padding:"8px 10px",textAlign:"right",color:"#6B7280",fontWeight:600 }}>{it?.cost!=null&&it?.cost!==""?`$${Number(it.cost).toFixed(2)}`:"—"}</td>
-                              <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#16A34A" }}>{line.pct}%</td>
+                              <td style={{ padding:"8px 10px" }}><span style={{ fontFamily:"monospace",fontSize:11,color:"#374151",fontWeight:700,background:"#F3F4F6",padding:"1px 6px",borderRadius:4 }}>{rd?.raw_id||line.rawId||"—"}</span></td>
+                              <td style={{ padding:"8px 10px",fontWeight:600,color:"#111827" }}>{rd?.description||"—"}</td>
+                              <td style={{ padding:"8px 10px",textAlign:"right",color:"#6B7280",fontWeight:600 }}>—</td>
+                              <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:800,color:"#16A34A" }}>{line.amount}</td>
                             </tr>
                           );
                         })}
@@ -1803,38 +1897,20 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
                       <tfoot>
                         <tr style={{ borderTop:"1px solid #E5E7EB",background:"#F9FAFB" }}>
                           <td colSpan={3} style={{ padding:"7px 10px",fontSize:11,fontWeight:700,color:"#6B7280",textTransform:"uppercase" }}>Total</td>
-                          <td style={{ padding:"7px 10px",textAlign:"right",fontWeight:800,color:recipe.reduce((s,l)=>s+l.pct,0)===100?"#16A34A":"#D97706" }}>{recipe.reduce((s,l)=>s+l.pct,0)}%</td>
+                          <td style={{ padding:"7px 10px",textAlign:"right",fontWeight:800,color:"#16A34A" }}>{recipe.reduce((s,l)=>s+(l.amount||0),0)}</td>
                         </tr>
                       </tfoot>
                     </table>
-                    {recipeWeight!=null && (()=>{
-                      const totalCostPer = recipe.reduce((sum,line)=>{
-                        const s2=incomingStock.find(st=>st.id===Number(line.stockId));
-                        const it2=s2?.items?.find(it=>it.id===Number(line.itemId));
-                        return sum + (it2?.cost!=null ? Number(it2.cost) * line.pct/100 : 0);
-                      },0);
-                      const costPerGram = recipeWeight>0 ? totalCostPer * recipeWeight / 1000 : null;
-                      return (
-                        <div style={{ marginTop:10,display:"flex",gap:16,flexWrap:"wrap" }}>
-                          <div style={{ background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:8,padding:"8px 14px",display:"flex",gap:20,alignItems:"center" }}>
-                            <div>
-                              <div style={{ fontSize:10,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>Product Weight</div>
-                              <div style={{ fontWeight:800,fontSize:16,color:"#D97706" }}>{recipeWeight}{recipeWeightUnit}</div>
-                            </div>
-                            <div>
-                              <div style={{ fontSize:10,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>Est. Ingredient Cost / Unit</div>
-                              <div style={{ fontWeight:800,fontSize:16,color:"#15803D" }}>${totalCostPer.toFixed(4)}</div>
-                            </div>
-                            {costPerGram!=null && (
-                              <div>
-                                <div style={{ fontSize:10,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>Cost / {recipeWeightUnit}</div>
-                                <div style={{ fontWeight:800,fontSize:16,color:"#15803D" }}>${costPerGram.toFixed(4)}</div>
-                              </div>
-                            )}
+                    {recipeWeight!=null && (
+                      <div style={{ marginTop:10,display:"flex",gap:16,flexWrap:"wrap" }}>
+                        <div style={{ background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:8,padding:"8px 14px",display:"flex",gap:20,alignItems:"center" }}>
+                          <div>
+                            <div style={{ fontSize:10,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>Product Weight</div>
+                            <div style={{ fontWeight:800,fontSize:16,color:"#D97706" }}>{recipeWeight}{recipeWeightUnit}</div>
                           </div>
                         </div>
-                      );
-                    })()}
+                      </div>
+                    )}
                   </div>
                 )}
                 {!isEditing && recipe.length===0 && (
@@ -1862,29 +1938,18 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
                       </div>
                     </div>
                     <div style={{ fontSize:11,fontWeight:600,color:"#6B7280",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:12 }}>
-                      Recipe Ingredients — enter % of production qty each stock item contributes
+                      Recipe Ingredients — enter amount per unit for each raw material
                     </div>
                     <div style={{ display:"flex",flexDirection:"column",gap:8,marginBottom:12 }}>
                       {lines.map((line,i)=>{
-                        const s=incomingStock.find(st=>st.id===Number(line.stockId));
                         return (
                           <div key={i} style={{ display:"grid",gridTemplateColumns:"1fr 120px auto",gap:8,alignItems:"center" }}>
-                            <select style={sel} value={line.stockId&&line.itemId?`${line.stockId}:${line.itemId}`:""} onChange={e=>{
-                              const [sid,iid]=e.target.value.split(":");
-                              setLine(i,"stockId",sid); setLine(i,"itemId",iid);
-                            }}>
-                              <option value="">— Choose stock item —</option>
-                              {incomingStock.map(s=>(
-                                <optgroup key={s.id} label={`${s.supplier} · ${s.po}`}>
-                                  {(s.items||[]).map(it=>(
-                                    <option key={it.id} value={`${s.id}:${it.id}`}>{it.code} · {it.description}</option>
-                                  ))}
-                                </optgroup>
-                              ))}
+                            <select style={sel} value={line.rawId} onChange={e=>setLine(i,"rawId",e.target.value)}>
+                              <option value="">— Choose raw —</option>
+                              {rawDefs.filter(r=>r.available!==false).map(r=><option key={r.id} value={r.raw_id}>{r.raw_id} — {r.description}</option>)}
                             </select>
                             <div style={{ display:"flex",alignItems:"center",gap:4 }}>
-                              <input style={{...inp,textAlign:"right",padding:"9px 8px"}} type="number" min="0" max="100" step="0.1" value={line.pct} onChange={e=>setLine(i,"pct",e.target.value)} placeholder="0" />
-                              <span style={{ fontSize:14,fontWeight:700,color:"#6B7280",whiteSpace:"nowrap" }}>%</span>
+                              <input style={{...inp,textAlign:"right",padding:"9px 8px"}} type="number" min="0" step="0.1" value={line.amount} onChange={e=>setLine(i,"amount",e.target.value)} placeholder="0" />
                             </div>
                             {lines.length>1
                               ? <button onClick={()=>removeLine(i)} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"9px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
@@ -1899,8 +1964,8 @@ function SettingsTab({ products, incomingStock, recipes, setRecipes, stockCodes,
                         <button onClick={addLine} style={{ display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:700,color:"#16A34A",background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:7,padding:"6px 12px",cursor:"pointer" }}>
                           <PlusIcon /> Add Ingredient
                         </button>
-                        <span style={{ fontSize:12,color:totalPct===100?"#16A34A":totalPct>100?"#DC2626":"#D97706",fontWeight:700 }}>
-                          Total: {totalPct.toFixed(1)}% {totalPct===100?"✓":totalPct>100?"(over 100%)":""}
+                        <span style={{ fontSize:12,color:"#6B7280",fontWeight:700 }}>
+                          Total: {totalAmount.toFixed(1)}
                         </span>
                       </div>
                       <div style={{ display:"flex",gap:8 }}>
@@ -2644,9 +2709,9 @@ export default function App() {
           </nav>
           <main className="app-main">
             {tab==="Incoming PO" && <IncomingStockTab data={incomingStock} setData={syncSetIncomingStock} rawDefs={rawDefs} setRawDefs={syncSetRawDefs} onDelete={id=>deleteRow("incoming_stock",id,setIncomingStock)} onReceived={handlePoReceived} />}
-            {tab==="Raws" && <StockTab data={stock} onDelete={id=>deleteRow("raws",id,setStock)} onUpdate={updateStockRow} stockCodes={stockCodes} rawDefs={rawDefs} />}
+            {tab==="Raws" && <StockTab data={stock} onDelete={id=>deleteRow("raws",id,setStock)} onUpdate={updateStockRow} stockCodes={stockCodes} rawDefs={rawDefs} production={production} incomingStock={incomingStock} />}
             {tab==="Products" && <ProductsTab data={products} setData={syncSetProducts} orders={orders} stockCodes={stockCodes} />}
-            {tab==="Production" && <ProductionTab data={production} setData={syncSetProduction} incomingStock={incomingStock} setIncomingStock={syncSetIncomingStock} products={products} setProducts={syncSetProducts} recipes={recipes} />}
+            {tab==="Production" && <ProductionTab data={production} setData={syncSetProduction} incomingStock={incomingStock} setIncomingStock={syncSetIncomingStock} products={products} setProducts={syncSetProducts} recipes={recipes} rawDefs={rawDefs} />}
             {tab==="Orders" && <OrdersTab data={orders} setData={syncSetOrders} products={products} />}
             {tab==="Settings" && <SettingsTab products={products} incomingStock={incomingStock} recipes={recipes} setRecipes={syncSetRecipes} stockCodes={stockCodes} setStockCodes={syncSetStockCodes} rawDefs={rawDefs} setRawDefs={syncSetRawDefs} />}
           </main>
