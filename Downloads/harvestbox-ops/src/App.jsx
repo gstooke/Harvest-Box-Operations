@@ -2132,9 +2132,7 @@ function OrdersTab({ data, setData, products }) {
   const [inlineEdit, setInlineEdit] = useState(null);
   const [inlineVal, setInlineVal] = useState("");
   const [collapsed, setCollapsed] = useState({});
-  const toggleCollapse = function(id) { setCollapsed(function(c) { return Object.assign({}, c, {[id]: c[id] === false ? true : false}); }); };
-  const [filterStatus, setFilterStatus] = useState(null);
-  const toggleFilter = function(s) { setFilterStatus(function(cur) { return cur === s ? null : s; }); };
+  const toggleCollapse = function(id) { setCollapsed(function(c) { return Object.assign({}, c, {[id]: !c[id]}); }); };
   const [search, setSearch] = useState("");
 
   const close = function() { setModal(false); setEdit(null); };
@@ -2179,11 +2177,6 @@ function OrdersTab({ data, setData, products }) {
     close();
   };
 
-  const deleteOrder = function(id) {
-    setData(function(d) { return d.filter(function(o) { return o.id !== id; }); });
-    showToast("Order deleted", "#DC2626");
-  };
-
   const STATUS_STYLE = {
     Open:                  { bg:"#F9FAFB",  color:"#374151",  label:"Open" },
     "Stock Allocated":     { bg:"#FEF3C7",  color:"#D97706",  label:"Stock Allocated" },
@@ -2192,144 +2185,150 @@ function OrdersTab({ data, setData, products }) {
   };
   const STATUS_LIST = ["Open","Stock Allocated","Paper Work Attached","Collected"];
 
+  const thO = { textAlign:"left",fontWeight:600,color:"#6B7280",fontSize:11,textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap",padding:"8px 12px",background:"#F9FAFB" };
+
+  const filtered = data.filter(function(o) {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    const matchHeader = (o.invoiceNumber||"").toLowerCase().includes(q) || (o.customer||"").toLowerCase().includes(q) || (o.reference||"").toLowerCase().includes(q);
+    const matchItems = (o.items||[]).some(function(it){ return (it.productId||"").toLowerCase().includes(q) || (it.description||"").toLowerCase().includes(q); });
+    return matchHeader || matchItems;
+  });
+
   return (
     <div>
       <Toast toast={toast} />
-      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24,gap:16 }}>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,gap:12,flexWrap:"wrap" }}>
         <div>
           <h2 style={{ margin:0,fontSize:22,fontWeight:800,color:"#111827" }}>Orders</h2>
-          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9CA3AF" }}>{(filterStatus ? data.filter(function(o){return o.status===filterStatus;}).length : data.length) + " order" + (data.length !== 1 ? "s" : "") + (filterStatus ? " · filtered by " + filterStatus : "")}</p>
+          <p style={{ margin:"4px 0 0",fontSize:13,color:"#9CA3AF" }}>{data.length} order{data.length!==1?"s":""}</p>
         </div>
-        <div style={{ flex:1,maxWidth:320,position:"relative" }}>
-          <input value={search} onChange={function(e){setSearch(e.target.value);}} placeholder="Search by invoice, customer, product..." style={{ width:"100%",padding:"10px 36px 10px 14px",borderRadius:8,border:"1px solid #E5E7EB",fontSize:13,background:"#fff",boxSizing:"border-box" }} />
-          {search && <button onClick={function(){setSearch("");}} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9CA3AF",fontSize:16,lineHeight:1,padding:0 }}>✕</button>}
-        </div>
+        <button onClick={function(){setModal(true);}} style={{ display:"flex",alignItems:"center",gap:7,padding:"10px 18px",background:"#15803D",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:14,fontWeight:700,flexShrink:0 }}>
+          <PlusIcon /> New Order
+        </button>
       </div>
 
-      <div className="status-grid-4">
-        {STATUS_LIST.map(function(s) {
-          const st = STATUS_STYLE[s];
-          const count = data.filter(function(o){return o.status===s;}).length;
-          return (
-            <div key={s} onClick={function(){toggleFilter(s);}} style={{ background:filterStatus===s?st.color:st.bg,border:"1px solid " + st.color,borderRadius:8,padding:"10px 14px",cursor:"pointer",transition:"background 0.15s" }}>
-              <div style={{ fontSize:10,fontWeight:700,color:filterStatus===s?"#fff":st.color,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4 }}>{st.label}</div>
-              <div style={{ fontSize:22,fontWeight:800,color:filterStatus===s?"#fff":st.color,lineHeight:1 }}>{count}</div>
-              {filterStatus===s && <div style={{ fontSize:10,color:"#fff",opacity:0.8,marginTop:3 }}>click to clear</div>}
-            </div>
-          );
-        })}
+      <div style={{ position:"relative",marginBottom:16 }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",pointerEvents:"none" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input value={search} onChange={function(e){setSearch(e.target.value);}} placeholder="Search invoice, customer, product…" style={{ width:"100%",padding:"9px 32px 9px 34px",borderRadius:8,border:"1px solid #E5E7EB",fontSize:13,background:"#fff",boxSizing:"border-box" }} />
+        {search && <button onClick={function(){setSearch("");}} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9CA3AF",fontSize:16,lineHeight:1,padding:0 }}>✕</button>}
       </div>
 
       {data.length === 0 ? (
         <div style={{ textAlign:"center",padding:"60px 0",color:"#9CA3AF" }}><div style={{ fontSize:40,marginBottom:12 }}>🧾</div><p>No orders yet</p></div>
       ) : (
-        <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
-          {filterStatus && <div style={{ fontSize:12,color:"#6B7280",marginBottom:4 }}>Showing <strong>{filterStatus}</strong> orders — <span onClick={function(){setFilterStatus(null);}} style={{ cursor:"pointer",textDecoration:"underline" }}>clear filter</span></div>}
-          {data.filter(function(o){
-            if (filterStatus && o.status !== filterStatus) return false;
-            if (search) {
-              var q = search.toLowerCase();
-              var matchHeader = o.invoiceNumber.toLowerCase().indexOf(q) !== -1 || o.customer.toLowerCase().indexOf(q) !== -1 || (o.reference||"").toLowerCase().indexOf(q) !== -1;
-              var matchItems = o.items.some(function(it){ return (it.productId||"").toLowerCase().indexOf(q) !== -1 || (it.description||"").toLowerCase().indexOf(q) !== -1 || (it.batch||"").toLowerCase().indexOf(q) !== -1; });
-              if (!matchHeader && !matchItems) return false;
-            }
-            return true;
-          }).slice().sort(function(a,b){
-            const order = ["Open","Stock Allocated","Paper Work Attached","Collected"];
-            const si = order.indexOf(a.status) - order.indexOf(b.status);
-            if (si !== 0) return si;
-            if (!a.dueDate && !b.dueDate) return 0;
-            if (!a.dueDate) return 1;
-            if (!b.dueDate) return -1;
-            return a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0;
-          }).map(function(order) {
-            const st = STATUS_STYLE[order.status] || STATUS_STYLE.Draft;
-            const overdue = order.status !== "Collected" && order.dueDate && new Date(order.dueDate) < new Date();
+        <div style={{ display:"flex",flexDirection:"column",gap:20 }}>
+          {STATUS_LIST.map(function(status) {
+            const st = STATUS_STYLE[status];
+            const group = filtered.filter(function(o){ return o.status === status; })
+              .slice().sort(function(a,b){
+                if (!a.dueDate && !b.dueDate) return 0;
+                if (!a.dueDate) return 1; if (!b.dueDate) return -1;
+                return a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0;
+              });
+            if (group.length === 0) return null;
             return (
-              <div key={order.id} style={{ background:"#fff",border:"1px solid " + (overdue ? "#DC2626" : "#E5E7EB"),borderRadius:8,overflow:"hidden" }}>
-                <div style={{ padding:"14px 20px",display:"flex",alignItems:"center",gap:12,background:overdue?"#FEF2F2":"#fff",borderBottom:"1px solid #E5E7EB",flexWrap:"wrap" }}>
-                  <div style={{ flex:1,minWidth:180 }}>
-                    <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:3 }}>
-                      <span onClick={function(){toggleCollapse(order.id);}} style={{ fontFamily:"monospace",fontSize:13,fontWeight:800,color:"#111827",cursor:"pointer",textDecoration:"underline dotted",userSelect:"none" }}>{order.invoiceNumber}</span>
-                      <span style={{ fontSize:11,color:"#9CA3AF" }}>{collapsed[order.id] === false ? "▼" : "▶"}</span>
-                      <span style={{ fontWeight:700,color:"#374151",fontSize:14 }}>{order.customer}</span>
-                      {order.reference && <span style={{ fontSize:11,color:"#9CA3AF",background:"#F3F4F6",padding:"1px 7px",borderRadius:10,fontFamily:"monospace" }}>{order.reference}</span>}
-                      <button onClick={function(){
-                          const idx = STATUS_LIST.indexOf(order.status);
-                          const next = STATUS_LIST[(idx + 1) % STATUS_LIST.length];
-                          setData(function(d){ return d.map(function(o){ return o.id===order.id ? Object.assign({},o,{status:next}) : o; }); });
-                        }} title={"Advance to: " + STATUS_LIST[(STATUS_LIST.indexOf(order.status)+1) % STATUS_LIST.length]} style={{ fontSize:11,fontWeight:700,background:st.bg,color:st.color,padding:"2px 10px",borderRadius:20,border:"1px solid " + st.color,cursor:"pointer" }}>{st.label} →</button>
-                      {overdue && <span style={{ fontSize:11,fontWeight:700,background:"#FEF2F2",color:"#DC2626",padding:"2px 8px",borderRadius:20 }}>Overdue</span>}
-                    </div>
-                    <div style={{ fontSize:11,color:"#9CA3AF",marginTop:2 }}>
-                      {order.date ? "Issued " + order.date : ""}{order.dueDate ? " · Due " + order.dueDate : ""}
-                    </div>
-                  </div>
-                  <div style={{ display:"flex",gap:6,marginLeft:"auto",alignItems:"center" }}>
-                    <button onClick={function(){setEdit(order);setModal(true);}} style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#16A34A",display:"flex",alignItems:"center" }}><EditIcon /></button>
-                    <button onClick={function(){deleteOrder(order.id);}} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"6px 10px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
-                  </div>
+              <div key={status}>
+                {/* Status section header — matches Raws type header */}
+                <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:8 }}>
+                  <span style={{ fontSize:13,fontWeight:800,color:"#374151",textTransform:"uppercase",letterSpacing:"0.07em" }}>{st.label}</span>
+                  <span style={{ fontSize:12,color:"#9CA3AF" }}>{group.length} order{group.length!==1?"s":""}</span>
+                  <span style={{ fontSize:12,fontWeight:700,color:st.color,background:st.bg,border:"1px solid "+st.color,padding:"2px 10px",borderRadius:20 }}>{group.length}</span>
                 </div>
 
-                {collapsed[order.id] === false && (
-                  <div style={{ padding:"12px 20px" }}>
-                    <div style={{ marginBottom:10 }}>
-                      {inlineEdit && inlineEdit.orderId === order.id && inlineEdit.field === "notes" ? (
-                        <div style={{ display:"flex",gap:6,alignItems:"center" }}>
-                          <input autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} placeholder="Add a note..." style={{ flex:1,fontSize:12,borderRadius:6,border:"1px solid #86EFAC",padding:"6px 10px",background:"#fff" }} />
-                          <button onClick={saveInline} style={{ background:"#15803D",border:"none",borderRadius:6,padding:"5px 12px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
-                          <button onClick={cancelInline} style={{ background:"none",border:"1px solid #E5E7EB",borderRadius:6,padding:"5px 8px",cursor:"pointer",color:"#9CA3AF",fontSize:11 }}>Cancel</button>
+                {/* Order cards */}
+                <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
+                  {group.map(function(order) {
+                    const isOpen = !!collapsed[order.id];
+                    const overdue = order.status !== "Collected" && order.dueDate && new Date(order.dueDate+"T00:00:00") < new Date();
+                    const nextStatus = STATUS_LIST[(STATUS_LIST.indexOf(order.status)+1) % STATUS_LIST.length];
+                    return (
+                      <div key={order.id} style={{ border:"1px solid "+(overdue?"#FECACA":"#E5E7EB"),borderRadius:8,overflow:"hidden",background:"#fff" }}>
+                        {/* Card header */}
+                        <div style={{ display:"flex",alignItems:"center",gap:10,padding:"11px 14px",background:overdue?"#FEF2F2":"#fff",flexWrap:"wrap" }}>
+                          <div style={{ display:"flex",alignItems:"center",gap:10,flex:1,minWidth:200,cursor:"pointer" }} onClick={function(){toggleCollapse(order.id);}}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0,transform:isOpen?"rotate(0deg)":"rotate(-90deg)",transition:"transform 0.18s" }}><polyline points="6 9 12 15 18 9"/></svg>
+                            <span style={{ fontFamily:"monospace",fontSize:13,fontWeight:700,color:"#374151",background:"#F3F4F6",padding:"2px 9px",borderRadius:5,flexShrink:0 }}>{order.invoiceNumber}</span>
+                            <span style={{ fontSize:13,fontWeight:600,color:"#111827",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{order.customer}</span>
+                            {overdue && <span style={{ fontSize:11,fontWeight:700,background:"#FEF2F2",color:"#DC2626",padding:"2px 8px",borderRadius:20,flexShrink:0 }}>Overdue</span>}
+                          </div>
+                          <span style={{ fontSize:12,color:"#9CA3AF",whiteSpace:"nowrap" }}>{order.dueDate ? "Due "+order.dueDate : ""}</span>
+                          <div style={{ display:"flex",gap:5 }}>
+                            <button onClick={function(){
+                              setData(function(d){ return d.map(function(o){ return o.id===order.id ? Object.assign({},o,{status:nextStatus}) : o; }); });
+                              showToast("→ "+nextStatus,"#16A34A");
+                            }} title={"Advance to: "+nextStatus} style={{ fontSize:11,fontWeight:700,background:st.bg,color:st.color,padding:"4px 10px",borderRadius:20,border:"1px solid "+st.color,cursor:"pointer",whiteSpace:"nowrap" }}>→ {nextStatus}</button>
+                            <button onClick={function(){setEdit(order);setModal(true);}} title="Edit" style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"5px 8px",cursor:"pointer",color:"#15803D",display:"flex",alignItems:"center" }}><EditIcon /></button>
+                          </div>
                         </div>
-                      ) : (
-                        <div onClick={function(){startInline(order.id,"notes",order.notes||"",null);}} style={{ background:"#FEF3C7",border:"1px dashed #F59E0B",borderRadius:7,padding:"7px 12px",fontSize:12,color:order.notes?"#92400E":"#9CA3AF",cursor:"pointer",userSelect:"none" }}>
-                          {order.notes ? ("📝 " + order.notes) : "＋ Add note..."}
-                          <span style={{ fontSize:10,color:"#9CA3AF",marginLeft:6 }}>✎</span>
-                        </div>
-                      )}
-                    </div>
-                    <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
-                      <thead>
-                        <tr style={{ borderBottom:"1px solid #E5E7EB" }}>
-                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Product ID</th>
-                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Description</th>
-                          <th style={{ padding:"6px 10px",textAlign:"left",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Batch</th>
-                          <th style={{ padding:"6px 10px",textAlign:"right",fontSize:10,fontWeight:600,color:"#9CA3AF",textTransform:"uppercase",letterSpacing:"0.05em" }}>Qty</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {order.items.map(function(item, i) {
-                          const isEditingBatch = inlineEdit && inlineEdit.orderId === order.id && inlineEdit.field === "batch" && inlineEdit.itemId === item.id;
-                          const prod = products.find(function(p){return p.productId === item.productId;});
-                          return (
-                            <tr key={item.id} style={{ borderBottom: i < order.items.length - 1 ? "1px solid #E5E7EB" : "none", background: i % 2 === 0 ? "transparent" : "#F9FAFB" }}>
-                              <td style={{ padding:"8px 10px" }}><span style={{ fontFamily:"monospace",fontSize:11,color:"#374151",fontWeight:700,background:"#F3F4F6",padding:"1px 6px",borderRadius:4 }}>{item.productId}</span></td>
-                              <td style={{ padding:"8px 10px",fontWeight:600,color:"#111827" }}>{item.description}</td>
-                              <td style={{ padding:"6px 10px" }}>
-                                {isEditingBatch ? (
-                                  <div style={{ display:"flex",gap:4,alignItems:"center" }}>
-                                    {prod && prod.batches && prod.batches.length > 0 ? (
-                                      <select autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} style={{ fontSize:12,fontWeight:700,borderRadius:6,border:"1px solid #86EFAC",padding:"3px 6px",background:"#fff",fontFamily:"monospace" }}>
-                                        <option value="">— batch —</option>
-                                        {prod.batches.map(function(b){return <option key={b.batch} value={b.batch}>{b.batch + " (" + b.qty + ")"}</option>;})}
-                                      </select>
-                                    ) : (
-                                      <input autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} style={{ fontSize:12,fontFamily:"monospace",fontWeight:700,borderRadius:6,border:"1px solid #86EFAC",padding:"3px 7px",width:140 }} />
-                                    )}
-                                    <button onClick={saveInline} style={{ background:"#15803D",border:"none",borderRadius:6,padding:"3px 10px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
-                                    <button onClick={cancelInline} style={{ background:"none",border:"1px solid #E5E7EB",borderRadius:6,padding:"3px 7px",cursor:"pointer",color:"#9CA3AF",fontSize:11 }}>Cancel</button>
-                                  </div>
-                                ) : (
-                                  <button onClick={function(){startInline(order.id,"batch",item.batch,item.id);}} style={{ fontFamily:"monospace",fontSize:11,background:"#F0FDF4",color:"#16A34A",padding:"2px 7px",borderRadius:4,fontWeight:700,border:"1px dashed #86EFAC",cursor:"pointer" }}>{item.batch || "set batch"} ✎</button>
-                                )}
-                              </td>
-                              <td style={{ padding:"8px 10px",textAlign:"right",fontWeight:700 }}>{item.qty}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+
+                        {/* Expanded: notes + items table */}
+                        {isOpen && (
+                          <div style={{ borderTop:"1px solid #E5E7EB" }}>
+                            {/* Notes */}
+                            <div style={{ padding:"10px 14px 0" }}>
+                              {inlineEdit && inlineEdit.orderId === order.id && inlineEdit.field === "notes" ? (
+                                <div style={{ display:"flex",gap:6,alignItems:"center",marginBottom:10 }}>
+                                  <input autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} placeholder="Add a note..." style={{ flex:1,fontSize:12,borderRadius:6,border:"1px solid #86EFAC",padding:"6px 10px",background:"#fff" }} />
+                                  <button onClick={saveInline} style={{ background:"#15803D",border:"none",borderRadius:6,padding:"5px 12px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
+                                  <button onClick={cancelInline} style={{ background:"none",border:"1px solid #E5E7EB",borderRadius:6,padding:"5px 8px",cursor:"pointer",color:"#9CA3AF",fontSize:11 }}>Cancel</button>
+                                </div>
+                              ) : (
+                                <div onClick={function(){startInline(order.id,"notes",order.notes||"",null);}} style={{ marginBottom:10,background:"#FEF3C7",border:"1px dashed #F59E0B",borderRadius:7,padding:"6px 12px",fontSize:12,color:order.notes?"#92400E":"#9CA3AF",cursor:"pointer",userSelect:"none" }}>
+                                  {order.notes ? ("📝 "+order.notes) : "＋ Add note…"}<span style={{ fontSize:10,color:"#9CA3AF",marginLeft:6 }}>✎</span>
+                                </div>
+                              )}
+                            </div>
+                            {/* Items table */}
+                            <div style={{ overflowX:"auto",WebkitOverflowScrolling:"touch" }}>
+                              <table style={{ width:"100%",minWidth:480,borderCollapse:"collapse",fontSize:12 }}>
+                                <thead>
+                                  <tr>
+                                    <th style={thO}>Product ID</th>
+                                    <th style={thO}>Description</th>
+                                    <th style={thO}>Batch</th>
+                                    <th style={{...thO,textAlign:"right"}}>Qty</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(order.items||[]).map(function(item, i) {
+                                    const isEditingBatch = inlineEdit && inlineEdit.orderId === order.id && inlineEdit.field === "batch" && inlineEdit.itemId === item.id;
+                                    const prod = products.find(function(p){return p.productId === item.productId;});
+                                    return (
+                                      <tr key={item.id} style={{ borderTop:"1px solid #E5E7EB",background:i%2===0?"#fff":"#F9FAFB" }}>
+                                        <td style={{ padding:"8px 12px",fontFamily:"monospace",color:"#374151",fontWeight:700 }}>{item.productId||<span style={{color:"#D1D5DB"}}>—</span>}</td>
+                                        <td style={{ padding:"8px 12px",color:"#111827",fontWeight:600 }}>{item.description}</td>
+                                        <td style={{ padding:"6px 12px" }}>
+                                          {isEditingBatch ? (
+                                            <div style={{ display:"flex",gap:4,alignItems:"center" }}>
+                                              {prod && prod.batches && prod.batches.length > 0 ? (
+                                                <select autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} style={{ fontSize:12,fontWeight:700,borderRadius:6,border:"1px solid #86EFAC",padding:"3px 6px",background:"#fff",fontFamily:"monospace" }}>
+                                                  <option value="">— batch —</option>
+                                                  {prod.batches.map(function(b){return <option key={b.batch} value={b.batch}>{b.batch+" ("+b.qty+")"}</option>;})}
+                                                </select>
+                                              ) : (
+                                                <input autoFocus value={inlineVal} onChange={function(e){setInlineVal(e.target.value);}} style={{ fontSize:12,fontFamily:"monospace",fontWeight:700,borderRadius:6,border:"1px solid #86EFAC",padding:"3px 7px",width:130 }} />
+                                              )}
+                                              <button onClick={saveInline} style={{ background:"#15803D",border:"none",borderRadius:6,padding:"3px 10px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:700 }}>Save</button>
+                                              <button onClick={cancelInline} style={{ background:"none",border:"1px solid #E5E7EB",borderRadius:6,padding:"3px 7px",cursor:"pointer",color:"#9CA3AF",fontSize:11 }}>Cancel</button>
+                                            </div>
+                                          ) : (
+                                            <button onClick={function(){startInline(order.id,"batch",item.batch,item.id);}} style={{ fontFamily:"monospace",fontSize:11,background:"#F0FDF4",color:"#15803D",padding:"2px 7px",borderRadius:4,fontWeight:700,border:"1px dashed #86EFAC",cursor:"pointer" }}>{item.batch||"set batch"} ✎</button>
+                                          )}
+                                        </td>
+                                        <td style={{ padding:"8px 12px",textAlign:"right",fontWeight:700,color:"#111827" }}>{item.qty}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
