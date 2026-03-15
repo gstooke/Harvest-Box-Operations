@@ -1295,6 +1295,7 @@ function ProductionTab({ data, setData, incomingStock, setIncomingStock, product
       {data.length===0 ? (
         <div style={{ textAlign:"center",padding:"60px 0",color:"#9CA3AF" }}><div style={{ fontSize:40,marginBottom:12 }}>⚙️</div><p>No production runs yet</p></div>
       ) : (()=>{
+        const thP = { textAlign:"left",fontWeight:600,color:"#6B7280",fontSize:11,textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap",padding:"8px 12px",background:"#F9FAFB" };
         // Group runs by productId, preserving first-seen order
         const productOrder = [];
         const productGroups = {};
@@ -1306,64 +1307,75 @@ function ProductionTab({ data, setData, incomingStock, setIncomingStock, product
           productGroups[row.productId].runs.push(row);
         });
         return (
-          <div style={{ display:"flex",flexDirection:"column",gap:16 }}>
+          <div style={{ display:"flex",flexDirection:"column",gap:20 }}>
             {productOrder.map(pid=>{
               const group = productGroups[pid];
               const groupTotal = group.runs.reduce((s,r)=>s+Number(r.qty||0),0);
               return (
-                <div key={pid} style={{ border:"1px solid #D1FAE5",borderRadius:10,overflow:"hidden" }}>
-                  {/* Product group header */}
-                  <div style={{ background:"#F0FDF4",borderBottom:"2px solid #86EFAC",padding:"12px 20px",display:"flex",alignItems:"center",gap:12 }}>
-                    <span style={{ fontFamily:"monospace",fontSize:12,fontWeight:700,background:"#D1FAE5",color:"#15803D",padding:"3px 10px",borderRadius:6 }}>{pid}</span>
-                    <span style={{ fontWeight:800,fontSize:16,color:"#111827",flex:1 }}>{group.description}</span>
-                    <span style={{ fontSize:12,color:"#16A34A",fontWeight:700 }}>{group.runs.length} run{group.runs.length!==1?"s":""}</span>
-                    <span style={{ fontSize:12,color:"#9CA3AF" }}>·</span>
-                    <span style={{ fontSize:13,fontWeight:800,color:"#16A34A" }}>{groupTotal} units total</span>
+                <div key={pid}>
+                  {/* Product section header — matches Raws type header */}
+                  <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:8 }}>
+                    <span style={{ fontFamily:"monospace",fontSize:12,fontWeight:800,color:"#374151",background:"#F3F4F6",padding:"2px 9px",borderRadius:5 }}>{pid}</span>
+                    <span style={{ fontSize:13,fontWeight:800,color:"#374151",textTransform:"uppercase",letterSpacing:"0.07em" }}>{group.description}</span>
+                    <span style={{ fontSize:12,color:"#9CA3AF" }}>{group.runs.length} run{group.runs.length!==1?"s":""}</span>
+                    <span style={{ fontSize:12,fontWeight:700,color:groupTotal>0?"#15803D":"#9CA3AF",background:groupTotal>0?"#F0FDF4":"#F9FAFB",padding:"2px 10px",borderRadius:20 }}>{groupTotal} units</span>
                   </div>
 
-                  {/* Runs within this product group */}
-                  <div style={{ background:"#fff" }}>
-                    {group.runs.map((row, ri)=>(
-                      <div key={row.id} style={{ borderBottom:ri<group.runs.length-1?"1px solid #E5E7EB":"none", padding:"14px 20px" }}>
-                        {/* Batch row */}
-                        <div style={{ display:"flex",alignItems:"center",gap:12,flexWrap:"wrap" }}>
-                          {/* Batch — leading field, clickable to expand */}
-                          <div style={{ display:"flex",alignItems:"center",gap:8,flex:1,minWidth:200,cursor:"pointer" }} onClick={()=>toggleRun(row.id)}>
-                            <span style={{ fontFamily:"monospace",fontSize:14,fontWeight:800,background:"#ECFDF5",color:"#065F46",padding:"4px 12px",borderRadius:7,border:"1px solid #A7F3D0",userSelect:"none" }}>{row.batch}</span>
-                            <div style={{ fontSize:22,fontWeight:800,color:"#16A34A",lineHeight:1 }}>{row.qty}</div>
-                            <div style={{ fontSize:11,color:"#9CA3AF",alignSelf:"flex-end",paddingBottom:2 }}>units</div>
-                            <span style={{ fontSize:11,color:"#9CA3AF",marginLeft:4 }}>{expandedRuns.has(row.id)?"▲":"▼"}</span>
+                  {/* Batch cards — matches Raws code group cards */}
+                  <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
+                    {group.runs.map(row=>{
+                      const isOpen = expandedRuns.has(row.id);
+                      return (
+                        <div key={row.id} style={{ border:"1px solid #E5E7EB",borderRadius:8,overflow:"hidden",background:"#fff" }}>
+                          {/* Collapsible batch header */}
+                          <div style={{ display:"flex",alignItems:"center",gap:10,padding:"11px 14px",flexWrap:"wrap" }}>
+                            <div style={{ display:"flex",alignItems:"center",gap:10,flex:1,minWidth:200,cursor:"pointer" }} onClick={()=>toggleRun(row.id)}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0,transform:isOpen?"rotate(0deg)":"rotate(-90deg)",transition:"transform 0.18s" }}><polyline points="6 9 12 15 18 9"/></svg>
+                              <span style={{ fontFamily:"monospace",fontSize:13,color:"#374151",fontWeight:700,background:"#F3F4F6",padding:"2px 9px",borderRadius:5,flexShrink:0 }}>{row.batch}</span>
+                              <span style={{ fontSize:12,color:"#6B7280" }}>{(row.stockLines||[]).length} ingredient{(row.stockLines||[]).length!==1?"s":""}</span>
+                            </div>
+                            <span style={{ fontSize:13,fontWeight:800,color:row.qty>0?"#15803D":"#9CA3AF",background:row.qty>0?"#F0FDF4":"#F9FAFB",padding:"3px 10px",borderRadius:20,whiteSpace:"nowrap" }}>{row.qty} units</span>
+                            <div style={{ display:"flex",gap:5 }}>
+                              <button onClick={()=>handlePrint(row)} title="Print" style={{ display:"flex",alignItems:"center",gap:5,padding:"5px 11px",background:"#F3F4F6",border:"none",borderRadius:7,cursor:"pointer",color:"#374151",fontSize:12,fontWeight:700 }}><PrintIcon /> Print</button>
+                              <button onClick={()=>{setEdit(row);setModal(true);}} title="Edit" style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"5px 8px",cursor:"pointer",color:"#15803D",display:"flex",alignItems:"center" }}><EditIcon /></button>
+                              <button onClick={()=>handleDelete(row, setIncomingStock)} title="Delete" style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"5px 8px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
+                            </div>
                           </div>
-                          {/* Actions */}
-                          <div style={{ display:"flex",gap:6,marginLeft:"auto" }}>
-                            <button onClick={()=>handlePrint(row)} title="Print" style={{ display:"flex",alignItems:"center",gap:5,padding:"5px 11px",background:"#F3F4F6",border:"none",borderRadius:7,cursor:"pointer",color:"#374151",fontSize:12,fontWeight:700 }}><PrintIcon /> Print</button>
-                            <button onClick={()=>{setEdit(row);setModal(true);}} style={{ background:"#F0FDF4",border:"none",borderRadius:7,padding:"5px 9px",cursor:"pointer",color:"#16A34A",display:"flex",alignItems:"center" }}><EditIcon /></button>
-                            <button onClick={()=>handleDelete(row, setIncomingStock)} style={{ background:"#FEF2F2",border:"none",borderRadius:7,padding:"5px 9px",cursor:"pointer",color:"#DC2626",display:"flex",alignItems:"center" }}><TrashIcon /></button>
-                          </div>
-                        </div>
 
-                        {/* Stock lines — hidden by default, shown on expand */}
-                        {expandedRuns.has(row.id) && (row.stockLines||[]).length>0 && (
-                          <div style={{ marginTop:10,display:"flex",flexDirection:"column",gap:5 }}>
-                            {(row.stockLines||[]).map((line,i)=>{
-                              const s = incomingStock.find(st=>st.id===line.stockId);
-                              const it = s?.items?.find(it=>it.id===line.itemId);
-                              return (
-                                <div key={i} style={{ display:"flex",alignItems:"center",gap:10,background:"#F9FAFB",borderRadius:7,padding:"7px 12px",flexWrap:"wrap" }}>
-                                  <div style={{ flex:1,minWidth:120 }}>
-                                    <span style={{ fontFamily:"monospace",fontSize:11,fontWeight:700,background:"#F3F4F6",color:"#374151",padding:"1px 6px",borderRadius:4,marginRight:6 }}>{it?.code||"—"}</span>
-                                    <span style={{ fontSize:12,color:"#374151",fontWeight:600 }}>{it?.description||"Unknown"}</span>
-                                  </div>
-                                  <span style={{ fontFamily:"monospace",fontSize:11,background:"#FEF3C7",color:"#D97706",padding:"1px 6px",borderRadius:4 }}>{s?.po||"—"}</span>
-                                  <span style={{ fontSize:11,color:"#9CA3AF" }}>{s?.supplier||""}</span>
-                                  <span style={{ fontSize:12,fontWeight:800,color:"#16A34A",marginLeft:"auto" }}>{line.qty} used</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                          {/* Stock lines table — shown on expand */}
+                          {isOpen && (row.stockLines||[]).length>0 && (
+                            <div style={{ overflowX:"auto",WebkitOverflowScrolling:"touch",borderTop:"1px solid #E5E7EB" }}>
+                              <table style={{ width:"100%",minWidth:520,borderCollapse:"collapse",fontSize:12 }}>
+                                <thead>
+                                  <tr>
+                                    <th style={thP}>Code</th>
+                                    <th style={thP}>Description</th>
+                                    <th style={thP}>PO</th>
+                                    <th style={thP}>Supplier</th>
+                                    <th style={{...thP,textAlign:"right"}}>Qty Used</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(row.stockLines||[]).map((line,i)=>{
+                                    const s = incomingStock.find(st=>st.id===line.stockId);
+                                    const it = s?.items?.find(it=>it.id===line.itemId);
+                                    return (
+                                      <tr key={i} style={{ borderTop:"1px solid #E5E7EB",background:i%2===0?"#fff":"#F9FAFB" }}>
+                                        <td style={{ padding:"8px 12px",fontFamily:"monospace",color:"#374151",fontWeight:700 }}>{it?.code||"—"}</td>
+                                        <td style={{ padding:"8px 12px",color:"#111827",fontWeight:600 }}>{it?.description||"Unknown"}</td>
+                                        <td style={{ padding:"8px 12px",fontFamily:"monospace",color:"#9CA3AF",whiteSpace:"nowrap" }}>{s?.po||"—"}</td>
+                                        <td style={{ padding:"8px 12px",color:"#6B7280",whiteSpace:"nowrap" }}>{s?.supplier||"—"}</td>
+                                        <td style={{ padding:"8px 12px",textAlign:"right",fontWeight:800,color:"#15803D" }}>{line.qty}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
